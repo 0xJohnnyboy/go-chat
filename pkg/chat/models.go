@@ -1,11 +1,17 @@
 package chat
+
 import (
+	"time"
 	"gorm.io/gorm"
 	nanoid "github.com/matoous/go-nanoid/v2"
 )
 
 type User struct {
-	gorm.Model
+	ID string `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+
 	Name string `gorm:"not null"`
 	Password *string
 	IsGuest bool `gorm:"default:false"`
@@ -15,14 +21,18 @@ type User struct {
 }
 
 type Channel struct {
-	gorm.Model
+	ID string `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+
 	Name string `gorm:"uniqueIndex;not null"`
-	// OwnerID string `gorm:"foreignKey:OwnerID;constraint:OnDelete:SET NULL"`
 	IsVisible bool
 	Password *string
 	LoggingDays uint
 
-	Owner User `gorm:"constraint:OnDelete:CASCADE"`
+	OwnerID string
+	Owner   User `gorm:"foreignKey:OwnerID;constraint:OnDelete:CASCADE"`
 	UserChannels []UserChannel
 }
 
@@ -38,7 +48,7 @@ type UserChannel struct {
 
     UserID    string `gorm:"not null"`
     ChannelID string `gorm:"not null"`
-	RoleID    string `gorm:"not null"`
+	RoleID    *string
 
 	User User `gorm:"foreignKey:UserID"`
 	Channel Channel `gorm:"foreignKey:ChannelID"`
@@ -52,8 +62,10 @@ type Role struct {
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	u.ID, err =  nanoid.New(8)
-	return
+	return err
 }
 
 func (c *Channel) BeforeCreate(tx *gorm.DB) (err error) {
 	c.ID, err =  nanoid.New(6)
+	return err
+}
