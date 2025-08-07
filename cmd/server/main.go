@@ -1,9 +1,9 @@
 package main
 
 import (
-	"log"
 	. "go-chat/internal/db"
 	"go-chat/internal/server"
+	"log"
 )
 
 func main() {

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"go-chat/internal/client"
 	tea "github.com/charmbracelet/bubbletea"
+	"go-chat/internal/client"
 	"log"
 )
 
