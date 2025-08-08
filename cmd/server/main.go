@@ -1,7 +1,7 @@
 package main
 
 import (
-	. "go-chat/internal/db"
+	. "go-chat/internal/storage"
 	"go-chat/internal/server"
 	"log"
 )
