@@ -1,6 +1,9 @@
 package chat
 
 type Message struct {
-	Username string `json:"username"`
-	Text     string `json:"text"`
+	ChannelID string `json:"channel_id"`
+	SenderID  string `json:"sender_id"`
+	Content   string `json:"content"`
+	Timestamp int64  `json:"timestamp"`
 }
+

@@ -2,7 +2,8 @@ package server
 
 import (
 	"github.com/gorilla/websocket"
-	"go-chat/pkg/chat"
+	. "go-chat/pkg/server"
+	. "go-chat/pkg/chat"
 )
 
 type Client struct {
@@ -33,3 +34,32 @@ func (c *Client) WritePump() {
 		}
 	}
 }
+
+func (c *Client) ReadPump(hub *Hub) {
+	c.Conn.SetReadLimit(512)
+	c.Conn.SetCloseHandler(func(code int, text string) error {
+		hub.unregister <- c
+		return nil
+	})
+
+	for {
+		_, msg, err := c.Conn.ReadMessage()
+		if err != nil {
+			break
+		}
+
+		var incoming Message
+		if err := json.Unmarshal(msg, &incoming); err != nil {
+			log.Printf("erreur parse message: %v", err)
+			continue
+		}
+
+		// On fixe l'expéditeur côté serveur
+		incoming.SenderID = c.User.ID
+		incoming.ChannelID = c.ChannelID
+
+		// Envoi au hub
+		hub.broadcast <- &incoming
+	}
+}
+
