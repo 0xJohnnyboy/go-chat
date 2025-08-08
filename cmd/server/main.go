@@ -1,16 +1,13 @@
-package main
+package server
 
 import (
 	. "go-chat/internal/storage"
-	"go-chat/internal/server"
 	"log"
 )
 
 func main() {
-	_, err := InitDB("gochat.db")
+	db, err := GetDB()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	server.Run()
 }

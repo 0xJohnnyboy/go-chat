@@ -13,8 +13,8 @@ type User struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 
 	Name     string `gorm:"not null"`
-	Password *string
-	IsGuest  bool `gorm:"default:false"`
+	Password string
+	RefreshToken string `json:"refresh_token"`
 
 	IPs          []UserIP `gorm:"constraint:OnDelete:SET NULL"`
 	UserChannels []UserChannel
