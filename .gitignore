@@ -2,3 +2,5 @@ gochat.db
 bin/
 *.tar.gz
 *.zip
+*.pem
+.env

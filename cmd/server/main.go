@@ -1,13 +1,18 @@
 package server
 
 import (
-	. "go-chat/internal/storage"
-	"log"
+	"fmt"
+	"os"
+
+	api "go-chat/internal/api"
 )
 
+var port = ":9876"
+
 func main() {
-	db, err := GetDB()
-	if err != nil {
-		log.Fatal(err)
+	if os.Args[0] == "-p" || os.Args[0] == "--port" {
+		port = fmt.Sprintf(":%v", os.Args[1])
 	}
+
+	api.Serve(port)
 }

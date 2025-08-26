@@ -12,7 +12,7 @@ const (
 	DBPath = "gochat.db"
 )
 
-func GetDB() (*gorm.DB, error) {
+func Connect() (*gorm.DB, error) {
 	db, err := gorm.Open(sqlite.Open(DBPath), &gorm.Config{})
 	if err != nil {
 		return nil, err
@@ -20,6 +20,7 @@ func GetDB() (*gorm.DB, error) {
 
 	err = db.AutoMigrate(
 		&User{},
+		&RefreshToken{},
 		&UserIP{},
 		&Channel{},
 		&Role{},

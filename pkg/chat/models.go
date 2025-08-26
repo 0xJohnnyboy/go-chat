@@ -12,12 +12,18 @@ type User struct {
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 
-	Name     string `gorm:"not null"`
+	Username string `gorm:"not null"`
 	Password string
-	RefreshToken string `json:"refresh_token"`
 
 	IPs          []UserIP `gorm:"constraint:OnDelete:SET NULL"`
 	UserChannels []UserChannel
+}
+
+type RefreshToken struct {
+	gorm.Model
+	UserID    string   `gorm:"index;constraint:OnDelete:CASCADE"`
+	TokenHash string `gorm:"unique"`
+	ExpiresAt int64
 }
 
 type Channel struct {
