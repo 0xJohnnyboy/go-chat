@@ -12,7 +12,7 @@ type User struct {
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 
-	Username string `gorm:"not null"`
+	Username string `gorm:"uniqueIndex;not null"`
 	Password string
 
 	IPs          []UserIP `gorm:"constraint:OnDelete:SET NULL"`
@@ -54,7 +54,7 @@ type UserChannel struct {
 
 	UserID    string `gorm:"not null"`
 	ChannelID string `gorm:"not null"`
-	RoleID    *string
+	RoleID    *uint
 
 	User    User    `gorm:"foreignKey:UserID"`
 	Channel Channel `gorm:"foreignKey:ChannelID"`
