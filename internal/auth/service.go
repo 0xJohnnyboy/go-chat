@@ -8,6 +8,7 @@ import (
 	"time"
 
 	. "go-chat/pkg/chat"
+	. "go-chat/internal/utils"
 	"gorm.io/gorm"
 )
 
