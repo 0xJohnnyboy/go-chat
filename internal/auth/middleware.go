@@ -65,7 +65,7 @@ func (am *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("user_id", uint(claims["user_id"].(float64)))
+		c.Set("user_id", claims["user_id"].(string))
 		c.Set("username", claims["username"].(string))
 
 		c.Next()
