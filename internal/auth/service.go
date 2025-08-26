@@ -97,7 +97,7 @@ func (s *AuthService) ValidateRefreshToken(token string) (*User, error) {
 		if isValid {
 			var user User
 			fmt.Println(rt.UserID)
-			if err := s.db.First(&user, rt.UserID).Error; err != nil {
+			if err := s.db.Where("id = ?", rt.UserID).First(&user).Error; err != nil {
 				return nil, err
 			}
 			go s.db.Delete(&RefreshToken{}, "user_id = ? AND expires_at < ?", rt.UserID, time.Now())

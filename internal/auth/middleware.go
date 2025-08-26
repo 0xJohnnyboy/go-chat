@@ -9,7 +9,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secret = os.Getenv("APP_SECRET")
+func getSecret() string {
+	return os.Getenv("APP_SECRET")
+}
 
 type AuthMiddleware struct {
 }
@@ -27,7 +29,7 @@ func GenerateToken(userID string, username string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secret))
+	return token.SignedString([]byte(getSecret()))
 }
 
 func ValidateToken(tokenString string) (jwt.MapClaims, error) {
@@ -35,7 +37,7 @@ func ValidateToken(tokenString string) (jwt.MapClaims, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, jwt.ErrSignatureInvalid
 		}
-		return []byte(secret), nil
+		return []byte(getSecret()), nil
 	})
 
 	if err != nil {
@@ -55,6 +57,7 @@ func (am *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token cookie is missing"})
+			c.Abort()
 			return
 		}
 
