@@ -1,0 +1,868 @@
+basePath: /
+definitions:
+  api.AuthResponse:
+    properties:
+      message:
+        example: Register successful
+        type: string
+      user:
+        $ref: '#/definitions/api.UserResponse'
+    type: object
+  api.BanInfo:
+    properties:
+      banned_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      banned_by:
+        $ref: '#/definitions/api.UserInfo'
+      expires_at:
+        example: "2023-01-02T00:00:00Z"
+        type: string
+      id:
+        example: 1
+        type: integer
+      is_active:
+        example: true
+        type: boolean
+      reason:
+        example: spam
+        type: string
+      user:
+        $ref: '#/definitions/api.UserInfo'
+      user_id:
+        example: a1b2c3d4
+        type: string
+    type: object
+  api.BanUserRequest:
+    properties:
+      reason:
+        example: spam
+        type: string
+      user_id:
+        example: a1b2c3d4
+        type: string
+    required:
+    - user_id
+    type: object
+  api.BansResponse:
+    properties:
+      bans:
+        items:
+          $ref: '#/definitions/api.BanInfo'
+        type: array
+    type: object
+  api.ChannelInfo:
+    properties:
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      id:
+        example: ch123
+        type: string
+      is_visible:
+        example: true
+        type: boolean
+      name:
+        example: general
+        type: string
+      owner:
+        $ref: '#/definitions/api.ChannelOwner'
+    type: object
+  api.ChannelOwner:
+    properties:
+      id:
+        example: a1b2c3d4
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  api.ChannelResponse:
+    properties:
+      channel:
+        $ref: '#/definitions/api.ChannelInfo'
+    type: object
+  api.ChannelsResponse:
+    properties:
+      channels:
+        items:
+          $ref: '#/definitions/api.ChannelInfo'
+        type: array
+    type: object
+  api.CreateChannelRequest:
+    properties:
+      is_visible:
+        example: true
+        type: boolean
+      name:
+        example: general
+        type: string
+      password:
+        example: secretpass
+        type: string
+    required:
+    - name
+    type: object
+  api.ErrorResponse:
+    properties:
+      error:
+        example: username cannot be empty
+        type: string
+    type: object
+  api.JoinChannelRequest:
+    properties:
+      password:
+        example: secretpass
+        type: string
+    type: object
+  api.MessageResponse:
+    properties:
+      message:
+        example: Logged out
+        type: string
+    type: object
+  api.TempBanUserRequest:
+    properties:
+      duration:
+        description: e.g., "24h", "30m"
+        example: 24h
+        type: string
+      reason:
+        example: timeout
+        type: string
+      user_id:
+        example: a1b2c3d4
+        type: string
+    required:
+    - duration
+    - user_id
+    type: object
+  api.UpdateUserResponse:
+    properties:
+      message:
+        example: User updated successfully
+        type: string
+      user:
+        $ref: '#/definitions/api.UserResponse'
+    type: object
+  api.UserInfo:
+    properties:
+      id:
+        example: a1b2c3d4
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  api.UserLoginInput:
+    properties:
+      password:
+        example: securePassword123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  api.UserRegisterInput:
+    properties:
+      password:
+        example: securePassword123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  api.UserResponse:
+    properties:
+      id:
+        example: a1b2c3d4
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  api.UsersResponse:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/api.UserInfo'
+        type: array
+    type: object
+  user.UpdateUserRequest:
+    properties:
+      password:
+        example: newPassword123
+        type: string
+      username:
+        example: new_username
+        type: string
+    type: object
+host: localhost:9876
+info:
+  contact:
+    email: support@gochat.dev
+    name: API Support
+    url: http://github.com/your-org/go-chat
+  description: A real-time chat server with JWT authentication, channel management,
+    and WebSocket support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Go Chat API
+  version: "1.0"
+paths:
+  /api/channels:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all publicly visible channels
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of visible channels
+          schema:
+            $ref: '#/definitions/api.ChannelsResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Get all visible channels
+      tags:
+      - Channels
+    post:
+      consumes:
+      - application/json
+      description: Create a new channel with optional password protection
+      parameters:
+      - description: Create channel request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Channel created successfully
+          schema:
+            $ref: '#/definitions/api.ChannelResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Create a new channel
+      tags:
+      - Channels
+  /api/channels/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a channel (only channel owner can delete)
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Channel deleted successfully
+          schema:
+            $ref: '#/definitions/api.MessageResponse'
+        "400":
+          description: Bad request or not authorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Delete a channel
+      tags:
+      - Channels
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific channel
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Channel details
+          schema:
+            $ref: '#/definitions/api.ChannelResponse'
+        "400":
+          description: Channel ID required
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Channel not found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Get channel details
+      tags:
+      - Channels
+  /api/channels/{id}/ban:
+    post:
+      consumes:
+      - application/json
+      description: Permanently ban a user from a channel (only channel owner can ban)
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Ban user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.BanUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User banned successfully
+          schema:
+            $ref: '#/definitions/api.MessageResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "403":
+          description: Only channel owner can ban users
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Ban user from channel
+      tags:
+      - Channel Administration
+  /api/channels/{id}/ban/{userId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a ban from a user, allowing them to rejoin the channel (only
+        channel owner can unban)
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID to unban
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User unbanned successfully
+          schema:
+            $ref: '#/definitions/api.MessageResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "403":
+          description: Only channel owner can unban users
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Unban user from channel
+      tags:
+      - Channel Administration
+  /api/channels/{id}/bans:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all active and inactive bans for a channel (only
+        channel owner can view)
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of channel bans
+          schema:
+            $ref: '#/definitions/api.BansResponse'
+        "400":
+          description: Channel ID required
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "403":
+          description: Only channel owner can view bans
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Get channel bans
+      tags:
+      - Channel Administration
+  /api/channels/{id}/join:
+    post:
+      consumes:
+      - application/json
+      description: Join a channel, optionally providing password for protected channels
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Join channel request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.JoinChannelRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully joined channel
+          schema:
+            $ref: '#/definitions/api.MessageResponse'
+        "400":
+          description: Bad request or incorrect password
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Join a channel
+      tags:
+      - Channels
+  /api/channels/{id}/leave:
+    delete:
+      consumes:
+      - application/json
+      description: Leave a channel that the user has previously joined
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully left channel
+          schema:
+            $ref: '#/definitions/api.MessageResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Leave a channel
+      tags:
+      - Channels
+  /api/channels/{id}/tempban:
+    post:
+      consumes:
+      - application/json
+      description: Temporarily ban a user from a channel for a specified duration
+        (only channel owner can ban)
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Temporary ban user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.TempBanUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User temporarily banned successfully
+          schema:
+            $ref: '#/definitions/api.MessageResponse'
+        "400":
+          description: Bad request or invalid duration format
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "403":
+          description: Only channel owner can ban users
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Temporarily ban user from channel
+      tags:
+      - Channel Administration
+  /api/channels/{id}/users:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of all users in a specific channel
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of channel users
+          schema:
+            $ref: '#/definitions/api.UsersResponse'
+        "400":
+          description: Channel ID required
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Get channel users
+      tags:
+      - Channels
+  /api/channels/me:
+    get:
+      consumes:
+      - application/json
+      description: Get all channels the authenticated user has joined
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of user's channels
+          schema:
+            $ref: '#/definitions/api.ChannelsResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Get user's channels
+      tags:
+      - Channels
+  /api/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user and clear authentication cookies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User logged out successfully
+          schema:
+            $ref: '#/definitions/api.MessageResponse'
+      security:
+      - CookieAuth: []
+      summary: Logout user
+      tags:
+      - Authentication
+  /api/refresh_token:
+    post:
+      consumes:
+      - application/json
+      description: Refresh JWT token using refresh token from cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token refreshed successfully
+          schema:
+            $ref: '#/definitions/api.MessageResponse'
+        "401":
+          description: Invalid or missing refresh token
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Refresh JWT token
+      tags:
+      - Authentication
+  /api/user:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete user account and clear authentication cookies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Account deleted successfully
+          schema:
+            $ref: '#/definitions/api.MessageResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Delete user account
+      tags:
+      - User Management
+    patch:
+      consumes:
+      - application/json
+      description: Update user username and/or password
+      parameters:
+      - description: Update user request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            $ref: '#/definitions/api.UpdateUserResponse'
+        "400":
+          description: Bad request or username already exists
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Update user information
+      tags:
+      - User Management
+  /api/user/channels/joined:
+    get:
+      consumes:
+      - application/json
+      description: Get all channels the authenticated user has joined
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of joined channels
+          schema:
+            $ref: '#/definitions/api.ChannelsResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Get joined channels
+      tags:
+      - User Management
+  /api/user/channels/owned:
+    get:
+      consumes:
+      - application/json
+      description: Get all channels owned by the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of owned channels
+          schema:
+            $ref: '#/definitions/api.ChannelsResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Get owned channels
+      tags:
+      - User Management
+  /hc:
+    get:
+      description: Check if the server is running and responsive
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Running
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - System
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user with username and password
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserLoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User logged in successfully
+          schema:
+            $ref: '#/definitions/api.AuthResponse'
+        "400":
+          description: Invalid credentials
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Login user
+      tags:
+      - Authentication
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with username and password
+      parameters:
+      - description: Registration request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UserRegisterInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User registered successfully
+          schema:
+            $ref: '#/definitions/api.AuthResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Authentication
+schemes:
+- https
+securityDefinitions:
+  Bearer:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+  CookieAuth:
+    description: JWT token stored in HTTP-only cookie
+    in: cookie
+    name: token
+    type: apiKey
+swagger: "2.0"
