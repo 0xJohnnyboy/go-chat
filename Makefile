@@ -33,5 +33,8 @@ test-coverage:
 	go tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report generated: coverage.html"
 
+docs:
+	swag init -g cmd/server/main.go
+
 clear:
 	rm -f bin/*

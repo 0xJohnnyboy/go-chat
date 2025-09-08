@@ -9,41 +9,14 @@ import (
 	"time"
 
 	c "go-chat/internal/channel"
-	. "go-chat/pkg/chat"
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
-
-func setupChannelAdminTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("Failed to connect to database: %v", err)
-	}
-
-	err = db.AutoMigrate(&User{}, &RefreshToken{}, &Role{}, &Channel{}, &UserChannel{}, &UserBan{})
-	if err != nil {
-		t.Fatalf("Failed to migrate database: %v", err)
-	}
-
-	// Create default roles
-	roles := []Role{
-		{Name: "Administrator"},
-		{Name: "Moderator"},
-		{Name: "Member"},
-		{Name: "Guest"},
-	}
-	for _, role := range roles {
-		db.Create(&role)
-	}
-
-	return db
-}
 
 func setupChannelAdminRouter(t *testing.T) (*gin.Engine, *gorm.DB, *AuthHandlers, *ChannelHandlers) {
 	gin.SetMode(gin.TestMode)
 	
-	db := setupChannelAdminTestDB(t)
+	db := setupTestDB(t)
 	router := NewRouter(db)
 	
 	r := gin.New()

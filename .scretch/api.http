@@ -1,0 +1,255 @@
+### register
+
+# @prompt username
+# @secret password
+
+POST {{API_URL}}/register HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "password": "{{password}}",
+  "username": "{{username}}"
+}
+
+
+### login
+
+POST {{API_URL}}/login HTTP/1.1
+Accept: application/json
+Content-Type: application/json
+
+{
+  "password": "{{password}}",
+  "username": "{{username}}"
+}
+
+### refresh_token
+
+POST {{API_URL}}/refresh_token HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+Content-Type: application/json
+
+
+### logout
+
+POST {{API_URL}}/api/logout HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+Content-Type: application/json
+
+
+### hc
+
+GET {{API_URL}}/hc HTTP/1.1
+Accept: application/json
+
+
+### swagger_docs
+
+GET {{API_URL}}/swagger/index.html HTTP/1.1
+Accept: text/html
+
+
+### update_user_username
+
+# @prompt new_username
+
+PATCH {{API_URL}}/api/user HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "{{new_username}}"
+}
+
+
+### update_user_password
+
+# @secret new_password
+
+PATCH {{API_URL}}/api/user HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "password": "{{new_password}}"
+}
+
+
+### update_user_both
+
+# @prompt new_username2
+# @secret new_password2
+
+PATCH {{API_URL}}/api/user HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "{{new_username2}}",
+  "password": "{{new_password2}}"
+}
+
+
+### delete_user
+
+DELETE {{API_URL}}/api/user HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### get_owned_channels
+
+GET {{API_URL}}/api/user/channels/owned HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### get_joined_channels
+
+GET {{API_URL}}/api/user/channels/joined HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### create_channel
+
+# @prompt channel_name
+# @secret channel_password
+
+POST {{API_URL}}/api/channels HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "name": "{{channel_name}}",
+  "password": "{{channel_password}}",
+  "is_visible": true
+}
+
+
+### get_all_channels
+
+GET {{API_URL}}/api/channels HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### get_user_channels
+
+GET {{API_URL}}/api/channels/me HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### get_channel_details
+
+# @prompt channel_id
+
+GET {{API_URL}}/api/channels/{{channel_id}} HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### join_channel
+
+# @prompt join_channel_id
+# @secret join_channel_password
+
+POST {{API_URL}}/api/channels/{{join_channel_id}}/join HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "password": "{{join_channel_password}}"
+}
+
+
+### leave_channel
+
+# @prompt leave_channel_id
+
+DELETE {{API_URL}}/api/channels/{{leave_channel_id}}/leave HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### delete_channel
+
+# @prompt delete_channel_id
+
+DELETE {{API_URL}}/api/channels/{{delete_channel_id}} HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### get_channel_users
+
+# @prompt users_channel_id
+
+GET {{API_URL}}/api/channels/{{users_channel_id}}/users HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### ban_user
+
+# @prompt ban_channel_id
+# @prompt ban_user_id
+# @prompt ban_reason
+
+POST {{API_URL}}/api/channels/{{ban_channel_id}}/ban HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "user_id": "{{ban_user_id}}",
+  "reason": "{{ban_reason}}"
+}
+
+
+### temp_ban_user
+
+# @prompt tempban_channel_id
+# @prompt tempban_user_id
+# @prompt tempban_reason
+# @prompt tempban_duration
+
+POST {{API_URL}}/api/channels/{{tempban_channel_id}}/tempban HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "user_id": "{{tempban_user_id}}",
+  "reason": "{{tempban_reason}}",
+  "duration": "{{tempban_duration}}"
+}
+
+
+### unban_user
+
+# @prompt unban_channel_id
+# @prompt unban_user_id
+
+DELETE {{API_URL}}/api/channels/{{unban_channel_id}}/ban/{{unban_user_id}} HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
+
+### get_channel_bans
+
+# @prompt bans_channel_id
+
+GET {{API_URL}}/api/channels/{{bans_channel_id}}/bans HTTP/1.1
+Cookie: token={{login.response.cookies.token.value}}; refresh_token={{login.response.cookies.refresh_token.value}}
+Accept: application/json
+
