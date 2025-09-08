@@ -66,6 +66,20 @@ type Role struct {
 	Name string `gorm:"uniqueIndex;not null"`
 }
 
+type UserBan struct {
+	gorm.Model
+	UserID    string `gorm:"not null;index"`
+	ChannelID string `gorm:"not null;index"`
+	BannedBy  string `gorm:"not null"` // UserID of the admin who banned
+	Reason    string
+	ExpiresAt *time.Time // nil for permanent bans
+	IsActive  bool       `gorm:"default:true"`
+
+	User      User    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Channel   Channel `gorm:"foreignKey:ChannelID;constraint:OnDelete:CASCADE"`
+	BannedByUser User `gorm:"foreignKey:BannedBy;constraint:OnDelete:SET NULL"`
+}
+
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	u.ID, err = nanoid.New(8)
 	return err

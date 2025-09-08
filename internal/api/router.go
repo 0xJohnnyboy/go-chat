@@ -44,6 +44,12 @@ func (r *Router) RegisterRoutes(router *gin.Engine) {
 		protected.DELETE("/channels/:id/leave", r.ch.LeaveChannelHandler)
 		protected.DELETE("/channels/:id", r.ch.DeleteChannelHandler)
 		protected.GET("/channels/:id/users", r.ch.GetChannelUsersHandler)
+		
+		// Channel administration endpoints
+		protected.POST("/channels/:id/ban", r.ch.BanUserHandler)
+		protected.POST("/channels/:id/tempban", r.ch.TempBanUserHandler)
+		protected.DELETE("/channels/:id/ban/:userId", r.ch.UnbanUserHandler)
+		protected.GET("/channels/:id/bans", r.ch.GetChannelBansHandler)
 	}
 }
 

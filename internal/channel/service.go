@@ -2,6 +2,7 @@ package channel
 
 import (
 	"errors"
+	"time"
 
 	. "go-chat/internal/utils"
 	. "go-chat/pkg/chat"
@@ -161,6 +162,186 @@ func (s *ChannelService) GetChannelUsers(channelID string) ([]User, error) {
 		Where("user_channels.channel_id = ?", channelID).
 		Find(&users).Error
 	return users, err
+}
+
+func (s *ChannelService) BanUser(adminID, userID, channelID, reason string) error {
+	// Check if admin is the channel owner or has admin privileges
+	channel, err := s.GetChannel(channelID)
+	if err != nil {
+		return err
+	}
+
+	if channel.OwnerID != adminID {
+		// TODO: Add role-based permission check for administrators/moderators
+		return errors.New("only channel owner can ban users")
+	}
+
+	// Cannot ban yourself
+	if adminID == userID {
+		return errors.New("cannot ban yourself")
+	}
+
+	// Cannot ban the channel owner
+	if channel.OwnerID == userID {
+		return errors.New("cannot ban channel owner")
+	}
+
+	// Check if user is in the channel
+	var userChannel UserChannel
+	err = s.db.Where("user_id = ? AND channel_id = ?", userID, channelID).First(&userChannel).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user is not in this channel")
+		}
+		return err
+	}
+
+	// Check if user is already banned
+	var existingBan UserBan
+	err = s.db.Where("user_id = ? AND channel_id = ? AND is_active = ?", userID, channelID, true).First(&existingBan).Error
+	if err == nil {
+		return errors.New("user is already banned")
+	}
+
+	// Create ban record
+	ban := UserBan{
+		UserID:    userID,
+		ChannelID: channelID,
+		BannedBy:  adminID,
+		Reason:    reason,
+		ExpiresAt: nil, // Permanent ban
+		IsActive:  true,
+	}
+
+	if err := s.db.Create(&ban).Error; err != nil {
+		return err
+	}
+
+	// Remove user from channel
+	return s.db.Delete(&userChannel).Error
+}
+
+func (s *ChannelService) TempBanUser(adminID, userID, channelID, reason string, duration time.Duration) error {
+	// Check if admin is the channel owner or has admin privileges
+	channel, err := s.GetChannel(channelID)
+	if err != nil {
+		return err
+	}
+
+	if channel.OwnerID != adminID {
+		// TODO: Add role-based permission check for administrators/moderators
+		return errors.New("only channel owner can ban users")
+	}
+
+	// Cannot ban yourself
+	if adminID == userID {
+		return errors.New("cannot ban yourself")
+	}
+
+	// Cannot ban the channel owner
+	if channel.OwnerID == userID {
+		return errors.New("cannot ban channel owner")
+	}
+
+	// Check if user is in the channel
+	var userChannel UserChannel
+	err = s.db.Where("user_id = ? AND channel_id = ?", userID, channelID).First(&userChannel).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user is not in this channel")
+		}
+		return err
+	}
+
+	// Check if user is already banned
+	var existingBan UserBan
+	err = s.db.Where("user_id = ? AND channel_id = ? AND is_active = ?", userID, channelID, true).First(&existingBan).Error
+	if err == nil {
+		return errors.New("user is already banned")
+	}
+
+	// Create temporary ban record
+	expiresAt := time.Now().Add(duration)
+	ban := UserBan{
+		UserID:    userID,
+		ChannelID: channelID,
+		BannedBy:  adminID,
+		Reason:    reason,
+		ExpiresAt: &expiresAt,
+		IsActive:  true,
+	}
+
+	if err := s.db.Create(&ban).Error; err != nil {
+		return err
+	}
+
+	// Remove user from channel
+	return s.db.Delete(&userChannel).Error
+}
+
+func (s *ChannelService) UnbanUser(adminID, userID, channelID string) error {
+	// Check if admin is the channel owner or has admin privileges
+	channel, err := s.GetChannel(channelID)
+	if err != nil {
+		return err
+	}
+
+	if channel.OwnerID != adminID {
+		// TODO: Add role-based permission check for administrators/moderators
+		return errors.New("only channel owner can unban users")
+	}
+
+	// Find active ban
+	var ban UserBan
+	err = s.db.Where("user_id = ? AND channel_id = ? AND is_active = ?", userID, channelID, true).First(&ban).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user is not banned")
+		}
+		return err
+	}
+
+	// Deactivate the ban
+	ban.IsActive = false
+	return s.db.Save(&ban).Error
+}
+
+func (s *ChannelService) IsUserBanned(userID, channelID string) (bool, error) {
+	var ban UserBan
+	err := s.db.Where("user_id = ? AND channel_id = ? AND is_active = ?", userID, channelID, true).First(&ban).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	// Check if temporary ban has expired
+	if ban.ExpiresAt != nil && time.Now().After(*ban.ExpiresAt) {
+		// Automatically expire the ban
+		ban.IsActive = false
+		s.db.Save(&ban)
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (s *ChannelService) GetChannelBans(adminID, channelID string) ([]UserBan, error) {
+	// Check if admin is the channel owner or has admin privileges
+	channel, err := s.GetChannel(channelID)
+	if err != nil {
+		return nil, err
+	}
+
+	if channel.OwnerID != adminID {
+		// TODO: Add role-based permission check for administrators/moderators
+		return nil, errors.New("only channel owner can view bans")
+	}
+
+	var bans []UserBan
+	err = s.db.Preload("User").Preload("BannedByUser").Where("channel_id = ? AND is_active = ?", channelID, true).Find(&bans).Error
+	return bans, err
 }
 
 func (s *ChannelService) getOrCreateRole(roleName string) (*Role, error) {

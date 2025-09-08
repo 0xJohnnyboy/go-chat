@@ -22,5 +22,16 @@ generate-cert:
 generate-secret:
 	echo "APP_SECRET=$$(openssl rand -hex 32)" > .env
 
+test:
+	go test ./...
+
+test-verbose:
+	go test -v ./...
+
+test-coverage:
+	go test -v -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
 clear:
 	rm -f bin/*

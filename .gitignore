@@ -4,3 +4,5 @@ bin/
 *.zip
 *.pem
 .env
+*.html
+*.out

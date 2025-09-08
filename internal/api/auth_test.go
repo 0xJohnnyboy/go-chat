@@ -19,7 +19,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	err = db.AutoMigrate(&User{}, &RefreshToken{}, &Role{})
+	err = db.AutoMigrate(&User{}, &RefreshToken{}, &Role{}, &Channel{}, &UserChannel{}, &UserBan{})
 	if err != nil {
 		t.Fatalf("Failed to migrate database: %v", err)
 	}
