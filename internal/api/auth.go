@@ -20,10 +20,35 @@ func NewHandlers(db *gorm.DB) *AuthHandlers {
 }
 
 type UserRegisterInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" binding:"required" example:"john_doe"`
+	Password string `json:"password" binding:"required" example:"securePassword123"`
 }
 
+type UserResponse struct {
+	ID       string `json:"id" example:"a1b2c3d4"`
+	Username string `json:"username" example:"john_doe"`
+}
+
+type AuthResponse struct {
+	Message string       `json:"message" example:"Register successful"`
+	User    UserResponse `json:"user"`
+}
+
+type ErrorResponse struct {
+	Error string `json:"error" example:"username cannot be empty"`
+}
+
+// RegisterHandler registers a new user
+// @Summary Register a new user
+// @Description Register a new user with username and password
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body UserRegisterInput true "Registration request"
+// @Success 200 {object} AuthResponse "User registered successfully"
+// @Failure 400 {object} ErrorResponse "Bad request"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /register [post]
 func (h *AuthHandlers) RegisterHandler(c *gin.Context) {
 	var input UserRegisterInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -61,10 +86,21 @@ func (h *AuthHandlers) RegisterHandler(c *gin.Context) {
 }
 
 type UserLoginInput struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" binding:"required" example:"john_doe"`
+	Password string `json:"password" binding:"required" example:"securePassword123"`
 }
 
+// LoginHandler authenticates a user
+// @Summary Login user
+// @Description Authenticate user with username and password
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Param request body UserLoginInput true "Login request"
+// @Success 200 {object} AuthResponse "User logged in successfully"
+// @Failure 400 {object} ErrorResponse "Invalid credentials"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /login [post]
 func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 	var input UserLoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -100,6 +136,19 @@ func (h *AuthHandlers) LoginHandler(c *gin.Context) {
 	})
 }
 
+type MessageResponse struct {
+	Message string `json:"message" example:"Logged out"`
+}
+
+// LogoutHandler logs out the user
+// @Summary Logout user
+// @Description Logout user and clear authentication cookies
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Security CookieAuth
+// @Success 200 {object} MessageResponse "User logged out successfully"
+// @Router /api/logout [post]
 func (h *AuthHandlers) LogoutHandler(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err == nil && refreshToken != "" {
@@ -112,6 +161,17 @@ func (h *AuthHandlers) LogoutHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"message": "Logged out"})
 }
 
+// RefreshTokenHandler refreshes the JWT token
+// @Summary Refresh JWT token
+// @Description Refresh JWT token using refresh token from cookie
+// @Tags Authentication
+// @Accept json
+// @Produce json
+// @Security CookieAuth
+// @Success 200 {object} MessageResponse "Token refreshed successfully"
+// @Failure 401 {object} ErrorResponse "Invalid or missing refresh token"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /api/refresh_token [post]
 func (h *AuthHandlers) RefreshTokenHandler(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 
