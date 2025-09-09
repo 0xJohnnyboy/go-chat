@@ -34,7 +34,7 @@ test-coverage:
 	@echo "Coverage report generated: coverage.html"
 
 docs:
-	swag init -g cmd/server/main.go
+	swag init --generalInfo cmd/server/main.go --output docs --parseInternal --parseDependency
 
 clear:
 	rm -f bin/*
