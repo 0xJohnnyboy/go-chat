@@ -572,3 +572,126 @@ func (h *ChannelHandlers) GetChannelBansHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"bans": banList})
 }
+
+type RoleUpdateRequest struct {
+	UserID string `json:"user_id" binding:"required" example:"abc12345"`
+	Role   string `json:"role" binding:"required" example:"Moderator"`
+}
+
+// PromoteUserHandler promotes a user in a channel
+// @Summary Promote user in channel
+// @Description Promote a user to a higher role in the channel (only channel owners can promote)
+// @Tags Channel Administration
+// @Accept json
+// @Produce json
+// @Security CookieAuth
+// @Param id path string true "Channel ID"
+// @Param request body RoleUpdateRequest true "Role update request"
+// @Success 200 {object} MessageResponse "User promoted successfully"
+// @Failure 400 {object} ErrorResponse "Bad request"
+// @Failure 401 {object} ErrorResponse "User not authenticated"
+// @Failure 403 {object} ErrorResponse "Only channel owners can promote users"
+// @Failure 404 {object} ErrorResponse "Channel or user not found"
+// @Router /api/channels/{id}/promote [post]
+func (h *ChannelHandlers) PromoteUserHandler(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	channelID := c.Param("id")
+	if channelID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Channel ID is required"})
+		return
+	}
+
+	var req RoleUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.PromoteUser(userID.(string), channelID, req.UserID, req.Role)
+	if err != nil {
+		if err.Error() == "channel not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+			return
+		}
+		if err.Error() == "only channel owners can promote users" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Only channel owners can promote users"})
+			return
+		}
+		if err.Error() == "user not found in channel" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found in channel"})
+			return
+		}
+		if err.Error() == "role not found" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid role"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to promote user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User promoted successfully"})
+}
+
+// DemoteUserHandler demotes a user in a channel
+// @Summary Demote user in channel
+// @Description Demote a user to a lower role in the channel (only channel owners can demote)
+// @Tags Channel Administration
+// @Accept json
+// @Produce json
+// @Security CookieAuth
+// @Param id path string true "Channel ID"
+// @Param request body RoleUpdateRequest true "Role update request"
+// @Success 200 {object} MessageResponse "User demoted successfully"
+// @Failure 400 {object} ErrorResponse "Bad request"
+// @Failure 401 {object} ErrorResponse "User not authenticated"
+// @Failure 403 {object} ErrorResponse "Only channel owners can demote users"
+// @Failure 404 {object} ErrorResponse "Channel or user not found"
+// @Router /api/channels/{id}/demote [post]
+func (h *ChannelHandlers) DemoteUserHandler(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	channelID := c.Param("id")
+	if channelID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Channel ID is required"})
+		return
+	}
+
+	var req RoleUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := h.service.DemoteUser(userID.(string), channelID, req.UserID, req.Role)
+	if err != nil {
+		if err.Error() == "channel not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Channel not found"})
+			return
+		}
+		if err.Error() == "only channel owners can demote users" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Only channel owners can demote users"})
+			return
+		}
+		if err.Error() == "user not found in channel" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found in channel"})
+			return
+		}
+		if err.Error() == "role not found" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid role"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to demote user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User demoted successfully"})
+}

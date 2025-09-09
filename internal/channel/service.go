@@ -344,6 +344,84 @@ func (s *ChannelService) GetChannelBans(adminID, channelID string) ([]UserBan, e
 	return bans, err
 }
 
+func (s *ChannelService) PromoteUser(requesterID, channelID, targetUserID, roleName string) error {
+	// Check if channel exists
+	var channel Channel
+	if err := s.db.First(&channel, "id = ?", channelID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("channel not found")
+		}
+		return err
+	}
+
+	// Check if requester is the channel owner
+	if channel.OwnerID != requesterID {
+		return errors.New("only channel owners can promote users")
+	}
+
+	// Check if target user exists in the channel
+	var userChannel UserChannel
+	if err := s.db.Where("user_id = ? AND channel_id = ?", targetUserID, channelID).First(&userChannel).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user not found in channel")
+		}
+		return err
+	}
+
+	// Get the target role
+	role, err := s.getOrCreateRole(roleName)
+	if err != nil {
+		return err
+	}
+
+	// Update user role
+	userChannel.RoleID = &role.ID
+	if err := s.db.Save(&userChannel).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *ChannelService) DemoteUser(requesterID, channelID, targetUserID, roleName string) error {
+	// Check if channel exists
+	var channel Channel
+	if err := s.db.First(&channel, "id = ?", channelID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("channel not found")
+		}
+		return err
+	}
+
+	// Check if requester is the channel owner
+	if channel.OwnerID != requesterID {
+		return errors.New("only channel owners can demote users")
+	}
+
+	// Check if target user exists in the channel
+	var userChannel UserChannel
+	if err := s.db.Where("user_id = ? AND channel_id = ?", targetUserID, channelID).First(&userChannel).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.New("user not found in channel")
+		}
+		return err
+	}
+
+	// Get the target role
+	role, err := s.getOrCreateRole(roleName)
+	if err != nil {
+		return err
+	}
+
+	// Update user role
+	userChannel.RoleID = &role.ID
+	if err := s.db.Save(&userChannel).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *ChannelService) getOrCreateRole(roleName string) (*Role, error) {
 	var role Role
 	err := s.db.Where("name = ?", roleName).First(&role).Error
