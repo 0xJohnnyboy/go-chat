@@ -291,6 +291,262 @@ curl -k https://localhost:9876/hc
 # Response: Running
 ```
 
+## Architecture Diagram
+
+### System Overview
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        Browser[Web Browser/Client]
+        Curl[curl/API Client]
+    end
+    
+    subgraph "TLS/Security"
+        TLS[TLS Certificate<br/>cert.pem/key.pem]
+    end
+    
+    subgraph "Go Chat Server :9876"
+        subgraph "HTTP Layer"
+            Gin[Gin Router<br/>Rate Limited]
+            Auth[Auth Middleware<br/>JWT Validation]
+            Routes[API Routes<br/>26+ endpoints]
+        end
+        
+        subgraph "API Handlers"
+            AuthH[Auth Handlers<br/>login/register]
+            UserH[User Handlers<br/>CRUD operations]
+            ChannelH[Channel Handlers<br/>management/admin]
+            MessageH[Message Handlers<br/>history/retrieval]
+            SearchH[Search Handlers<br/>users/channels/messages]
+            AuditH[Audit Handlers<br/>logs/compliance]
+        end
+        
+        subgraph "Business Logic"
+            AuthS[Auth Service<br/>JWT/bcrypt]
+            UserS[User Service<br/>account mgmt]
+            ChannelS[Channel Service<br/>with audit logging]
+            MessageS[Message Service<br/>history mgmt]
+            SearchS[Search Service<br/>with filters]
+            AuditS[Audit Service<br/>comprehensive logging]
+        end
+        
+        subgraph "Data Layer"
+            GORM[GORM ORM<br/>Auto-migration]
+            SQLite[(SQLite DB<br/>gochat.db)]
+        end
+        
+        subgraph "Documentation"
+            Swagger[Swagger UI<br/>/swagger/index.html]
+            OpenAPI[OpenAPI Spec<br/>docs/]
+        end
+    end
+    
+    subgraph "Configuration"
+        Env[.env file<br/>APP_SECRET]
+        Config[TLS Config<br/>HTTPS Only]
+    end
+    
+    %% Client connections
+    Browser -->|HTTPS Requests| TLS
+    Curl -->|HTTPS + -k flag| TLS
+    TLS -->|Encrypted Traffic| Gin
+    
+    %% HTTP Flow
+    Gin -->|Authentication| Auth
+    Auth -->|Validated Requests| Routes
+    Routes -->|Route to Handler| AuthH
+    Routes -->|Route to Handler| UserH
+    Routes -->|Route to Handler| ChannelH
+    Routes -->|Route to Handler| MessageH
+    Routes -->|Route to Handler| SearchH
+    Routes -->|Route to Handler| AuditH
+    
+    %% Handler to Service mapping
+    AuthH -->|Business Logic| AuthS
+    UserH -->|Business Logic| UserS
+    ChannelH -->|Business Logic| ChannelS
+    MessageH -->|Business Logic| MessageS
+    SearchH -->|Business Logic| SearchS
+    AuditH -->|Business Logic| AuditS
+    
+    %% Service to Data mapping
+    AuthS -->|Data Access| GORM
+    UserS -->|Data Access| GORM
+    ChannelS -->|Data Access + Audit| GORM
+    ChannelS -->|Automatic Logging| AuditS
+    MessageS -->|Data Access| GORM
+    SearchS -->|Data Queries| GORM
+    AuditS -->|Audit Storage| GORM
+    GORM -->|ORM Operations| SQLite
+    
+    %% Documentation
+    Routes -->|API Specs| Swagger
+    Swagger -->|Generated Docs| OpenAPI
+    
+    %% Configuration
+    Env -->|JWT Secret| AuthS
+    Config -->|TLS Setup| TLS
+    
+    classDef handler fill:#e1f5fe
+    classDef service fill:#f3e5f5
+    classDef data fill:#e8f5e8
+    classDef security fill:#fff3e0
+    classDef client fill:#fce4ec
+    
+    class AuthH,UserH,ChannelH,MessageH,SearchH,AuditH handler
+    class AuthS,UserS,ChannelS,MessageS,SearchS,AuditS service
+    class GORM,SQLite data
+    class TLS,Auth,Env security
+    class Browser,Curl client
+```
+
+### Data Flow for Admin Actions
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Auth as Auth Middleware
+    participant ChannelH as Channel Handler
+    participant ChannelS as Channel Service
+    participant AuditS as Audit Service
+    participant DB as SQLite Database
+    
+    Client->>+Auth: POST /api/channels/123/ban
+    Auth->>Auth: Validate JWT Token
+    Auth->>+ChannelH: Forward Request
+    
+    ChannelH->>+ChannelS: BanUser(adminID, userID, channelID, reason)
+    ChannelS->>DB: Check permissions & validate
+    ChannelS->>DB: Create ban record
+    ChannelS->>+AuditS: LogUserBan(adminID, userID, channelID, reason, false, nil)
+    AuditS->>DB: Store audit log with metadata
+    AuditS-->>-ChannelS: Audit logged
+    ChannelS->>DB: Remove user from channel
+    ChannelS-->>-ChannelH: Ban successful
+    
+    ChannelH-->>-Auth: Success response
+    Auth-->>-Client: 200 OK {"message": "User banned successfully"}
+    
+    Note over AuditS,DB: Audit log includes:<br/>- Action: BAN_USER<br/>- Actor, Target, Channel<br/>- Reason in metadata<br/>- Timestamp
+```
+
+### Database Schema Overview
+
+```mermaid
+erDiagram
+    Users ||--o{ UserChannels : "belongs to"
+    Users ||--o{ AuditLogs : "performs actions"
+    Users ||--o{ Messages : "writes"
+    Users ||--o{ UserBans : "can be banned"
+    Users ||--o{ UserIPs : "has IPs"
+    Users ||--o{ RefreshTokens : "has tokens"
+    
+    Channels ||--o{ UserChannels : "contains"
+    Channels ||--o{ Messages : "stores"
+    Channels ||--o{ UserBans : "has bans"
+    Channels ||--o{ AuditLogs : "tracked in"
+    
+    Roles ||--o{ UserChannels : "assigned to"
+    
+    Users {
+        string id PK "nanoid(8)"
+        string username UK "unique"
+        string password "bcrypt hash"
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    Channels {
+        string id PK "nanoid(6)"
+        string name UK "unique"
+        boolean is_visible
+        string password "optional"
+        uint logging_days "message retention"
+        string owner_id FK
+        timestamp created_at
+    }
+    
+    UserChannels {
+        uint id PK
+        string user_id FK
+        string channel_id FK
+        uint role_id FK
+        timestamp joined_at
+    }
+    
+    AuditLogs {
+        uint id PK
+        string action "BAN_USER, PROMOTE_USER, etc"
+        string actor_id FK
+        string target_id FK "optional"
+        string channel_id FK "optional"
+        string description "human readable"
+        json metadata "structured data"
+        timestamp created_at
+    }
+    
+    Messages {
+        string id PK "nanoid(10)"
+        string content
+        string user_id FK
+        string channel_id FK
+        timestamp created_at
+    }
+    
+    UserBans {
+        uint id PK
+        string user_id FK
+        string channel_id FK
+        string banned_by FK
+        string reason
+        timestamp expires_at "null = permanent"
+        boolean is_active
+        timestamp created_at
+    }
+    
+    Roles {
+        uint id PK
+        string name UK "Administrator, Moderator, etc"
+    }
+```
+
+### Rate Limiting Strategy
+
+```mermaid
+graph LR
+    subgraph "Rate Limiting Tiers"
+        subgraph "Strict (5 req/sec)"
+            A1[POST /register]
+            A2[POST /login]
+        end
+        
+        subgraph "Standard (30 req/sec)"
+            B1[POST /api/channels]
+            B2[POST /api/channels/:id/ban]
+            B3[PATCH /api/user]
+            B4[DELETE /api/user]
+        end
+        
+        subgraph "Lenient (100 req/sec)"
+            C1[GET /api/channels]
+            C2[GET /api/search/*]
+            C3[GET /api/audit]
+            C4[GET /api/channels/:id/audit]
+            C5[GET /hc]
+        end
+    end
+    
+    Client[Client Request] --> IPCheck{IP Address}
+    IPCheck --> RateLimit{Rate Limit Check}
+    RateLimit -->|Within Limit| Allow[Process Request]
+    RateLimit -->|Exceeded| Block[429 Too Many Requests]
+    
+    Allow --> Auth[Authentication Check]
+    Auth -->|Valid| Handler[Route to Handler]
+    Auth -->|Invalid| Reject[401 Unauthorized]
+```
+
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 - see the LICENSE file for details.
