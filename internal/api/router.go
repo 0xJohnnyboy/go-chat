@@ -12,6 +12,7 @@ type Router struct {
 	ah *AuthHandlers
 	ch *ChannelHandlers
 	uh *UserHandlers
+	mh *MessageHandlers
 	am *a.AuthMiddleware
 	// Rate limiters for different endpoint types
 	authRateLimit     *middleware.IPRateLimiter
@@ -24,6 +25,7 @@ func NewRouter(db *gorm.DB) *Router {
 		ah: NewHandlers(db),
 		ch: NewChannelHandlers(db),
 		uh: NewUserHandlers(db),
+		mh: NewMessageHandlers(db),
 		am: a.NewAuthMiddleware(),
 		// Initialize rate limiters with different configurations
 		authRateLimit:     middleware.NewIPRateLimiter(middleware.StrictRateLimit),
@@ -69,6 +71,7 @@ func (r *Router) RegisterRoutes(router *gin.Engine) {
 		readOnly.GET("/channels/:id", r.ch.GetChannelHandler)
 		readOnly.GET("/channels/:id/users", r.ch.GetChannelUsersHandler)
 		readOnly.GET("/channels/:id/bans", r.ch.GetChannelBansHandler)
+		readOnly.GET("/channels/:id/messages", r.mh.GetChannelMessagesHandler)
 	}
 	
 	{
@@ -91,6 +94,8 @@ func (r *Router) RegisterRoutes(router *gin.Engine) {
 		protected.POST("/channels/:id/ban", r.ch.BanUserHandler)
 		protected.POST("/channels/:id/tempban", r.ch.TempBanUserHandler)
 		protected.DELETE("/channels/:id/ban/:userId", r.ch.UnbanUserHandler)
+		protected.POST("/channels/:id/promote", r.ch.PromoteUserHandler)
+		protected.POST("/channels/:id/demote", r.ch.DemoteUserHandler)
 	}
 }
 
