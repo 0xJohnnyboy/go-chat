@@ -937,6 +937,190 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/search/channels": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Search for visible channels by name (partial matching)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search"
+                ],
+                "summary": "Search channels",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query (minimum 2 characters)",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results to return (default: 20, max: 50)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Channels found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ChannelsSearchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid query",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/search/messages": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Search for messages within a specific channel (only for channel members)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search"
+                ],
+                "summary": "Search messages",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query (minimum 2 characters)",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Channel ID to search within",
+                        "name": "channel_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results to return (default: 20, max: 50)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Messages found",
+                        "schema": {
+                            "$ref": "#/definitions/api.MessagesSearchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid query or channel_id",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "You are not a member of this channel",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Channel not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/search/users": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Search for users by username (partial matching)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search"
+                ],
+                "summary": "Search users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query (minimum 2 characters)",
+                        "name": "q",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results to return (default: 20, max: 50)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Users found",
+                        "schema": {
+                            "$ref": "#/definitions/api.UsersSearchResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request - invalid query",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/user": {
             "delete": {
                 "security": [
@@ -1357,6 +1541,31 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ChannelSearchResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_visible": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "username": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "api.ChannelsResponse": {
             "type": "object",
             "properties": {
@@ -1365,6 +1574,20 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/api.ChannelInfo"
                     }
+                }
+            }
+        },
+        "api.ChannelsSearchResponse": {
+            "type": "object",
+            "properties": {
+                "channels": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ChannelSearchResult"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -1446,6 +1669,37 @@ const docTemplate = `{
                 }
             }
         },
+        "api.MessageSearchResult": {
+            "type": "object",
+            "properties": {
+                "channel_id": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "user": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "username": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "api.MessagesResponse": {
             "type": "object",
             "properties": {
@@ -1456,6 +1710,20 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.MessageInfo"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.MessagesSearchResponse": {
+            "type": "object",
+            "properties": {
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.MessageSearchResult"
                     }
                 },
                 "total": {
@@ -1574,6 +1842,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.UserSearchResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "api.UsersResponse": {
             "type": "object",
             "properties": {
@@ -1581,6 +1860,20 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/api.UserInfo"
+                    }
+                }
+            }
+        },
+        "api.UsersSearchResponse": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.UserSearchResult"
                     }
                 }
             }

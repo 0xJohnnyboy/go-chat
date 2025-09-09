@@ -82,12 +82,37 @@ definitions:
       channel:
         $ref: '#/definitions/api.ChannelInfo'
     type: object
+  api.ChannelSearchResult:
+    properties:
+      id:
+        type: string
+      is_visible:
+        type: boolean
+      name:
+        type: string
+      owner:
+        properties:
+          id:
+            type: string
+          username:
+            type: string
+        type: object
+    type: object
   api.ChannelsResponse:
     properties:
       channels:
         items:
           $ref: '#/definitions/api.ChannelInfo'
         type: array
+    type: object
+  api.ChannelsSearchResponse:
+    properties:
+      channels:
+        items:
+          $ref: '#/definitions/api.ChannelSearchResult'
+        type: array
+      total:
+        type: integer
     type: object
   api.CreateChannelRequest:
     properties:
@@ -141,6 +166,26 @@ definitions:
         example: Logged out
         type: string
     type: object
+  api.MessageSearchResult:
+    properties:
+      channel_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      user:
+        properties:
+          id:
+            type: string
+          username:
+            type: string
+        type: object
+      user_id:
+        type: string
+    type: object
   api.MessagesResponse:
     properties:
       has_more:
@@ -148,6 +193,15 @@ definitions:
       messages:
         items:
           $ref: '#/definitions/api.MessageInfo'
+        type: array
+      total:
+        type: integer
+    type: object
+  api.MessagesSearchResponse:
+    properties:
+      messages:
+        items:
+          $ref: '#/definitions/api.MessageSearchResult'
         type: array
       total:
         type: integer
@@ -230,11 +284,27 @@ definitions:
         example: john_doe
         type: string
     type: object
+  api.UserSearchResult:
+    properties:
+      id:
+        type: string
+      username:
+        type: string
+    type: object
   api.UsersResponse:
     properties:
       users:
         items:
           $ref: '#/definitions/api.UserInfo'
+        type: array
+    type: object
+  api.UsersSearchResponse:
+    properties:
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/api.UserSearchResult'
         type: array
     type: object
   user.UpdateUserRequest:
@@ -847,6 +917,125 @@ paths:
       summary: Refresh JWT token
       tags:
       - Authentication
+  /api/search/channels:
+    get:
+      consumes:
+      - application/json
+      description: Search for visible channels by name (partial matching)
+      parameters:
+      - description: Search query (minimum 2 characters)
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: 'Number of results to return (default: 20, max: 50)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Channels found
+          schema:
+            $ref: '#/definitions/api.ChannelsSearchResponse'
+        "400":
+          description: Bad request - invalid query
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Search channels
+      tags:
+      - Search
+  /api/search/messages:
+    get:
+      consumes:
+      - application/json
+      description: Search for messages within a specific channel (only for channel
+        members)
+      parameters:
+      - description: Search query (minimum 2 characters)
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Channel ID to search within
+        in: query
+        name: channel_id
+        required: true
+        type: string
+      - description: 'Number of results to return (default: 20, max: 50)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Messages found
+          schema:
+            $ref: '#/definitions/api.MessagesSearchResponse'
+        "400":
+          description: Bad request - invalid query or channel_id
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "403":
+          description: You are not a member of this channel
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Channel not found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Search messages
+      tags:
+      - Search
+  /api/search/users:
+    get:
+      consumes:
+      - application/json
+      description: Search for users by username (partial matching)
+      parameters:
+      - description: Search query (minimum 2 characters)
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: 'Number of results to return (default: 20, max: 50)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Users found
+          schema:
+            $ref: '#/definitions/api.UsersSearchResponse'
+        "400":
+          description: Bad request - invalid query
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Search users
+      tags:
+      - Search
   /api/user:
     delete:
       consumes:
