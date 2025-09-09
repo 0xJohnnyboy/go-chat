@@ -80,6 +80,34 @@ type UserBan struct {
 	BannedByUser User `gorm:"foreignKey:BannedBy;constraint:OnDelete:SET NULL"`
 }
 
+type Message struct {
+	ID        string `gorm:"primarykey"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+
+	Content   string `gorm:"type:text;not null"`
+	UserID    string `gorm:"not null;index"`
+	ChannelID string `gorm:"not null;index"`
+
+	User    User    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Channel Channel `gorm:"foreignKey:ChannelID;constraint:OnDelete:CASCADE"`
+}
+
+type AuditLog struct {
+	gorm.Model
+	Action      string `gorm:"not null;index"` // CREATE_CHANNEL, BAN_USER, PROMOTE_USER, etc.
+	ActorID     string `gorm:"not null"`       // Who performed the action
+	TargetID    *string                       // Who was affected (optional)
+	ChannelID   *string                       // Which channel (optional)
+	Description string                        // Human-readable description
+	Metadata    string `gorm:"type:json"`     // Additional data as JSON
+
+	Actor   User     `gorm:"foreignKey:ActorID;constraint:OnDelete:CASCADE"`
+	Target  *User    `gorm:"foreignKey:TargetID;constraint:OnDelete:SET NULL"`
+	Channel *Channel `gorm:"foreignKey:ChannelID;constraint:OnDelete:SET NULL"`
+}
+
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	u.ID, err = nanoid.New(8)
 	return err
@@ -87,5 +115,10 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 
 func (c *Channel) BeforeCreate(tx *gorm.DB) (err error) {
 	c.ID, err = nanoid.New(6)
+	return err
+}
+
+func (m *Message) BeforeCreate(tx *gorm.DB) (err error) {
+	m.ID, err = nanoid.New(10)
 	return err
 }

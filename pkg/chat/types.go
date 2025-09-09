@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type Message struct {
+type WSMessage struct {
 	ChannelID string `json:"channel_id"`
 	SenderID  string `json:"sender_id"`
 	Content   string `json:"content"`
@@ -16,7 +16,7 @@ type Message struct {
 type Client struct {
 	Conn *websocket.Conn
 	User *User
-	Outgoing chan []Message
+	Outgoing chan []WSMessage
 }
 
 type Hub struct {
