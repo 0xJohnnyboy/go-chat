@@ -18,6 +18,11 @@ func NewUserHandlers(db *gorm.DB) *UserHandlers {
 	}
 }
 
+type UpdateUserRequest struct {
+	Username *string `json:"username,omitempty" example:"new_username"`
+	Password *string `json:"password,omitempty" example:"newPassword123"`
+}
+
 type UpdateUserResponse struct {
 	Message string       `json:"message" example:"User updated successfully"`
 	User    UserResponse `json:"user"`
@@ -30,7 +35,7 @@ type UpdateUserResponse struct {
 // @Accept json
 // @Produce json
 // @Security CookieAuth
-// @Param request body user.UpdateUserRequest true "Update user request"
+// @Param request body UpdateUserRequest true "Update user request"
 // @Success 200 {object} UpdateUserResponse "User updated successfully"
 // @Failure 400 {object} ErrorResponse "Bad request or username already exists"
 // @Failure 401 {object} ErrorResponse "User not authenticated"
@@ -44,13 +49,19 @@ func (h *UserHandlers) UpdateUserHandler(c *gin.Context) {
 		return
 	}
 
-	var req u.UpdateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
+	var apiReq UpdateUserRequest
+	if err := c.ShouldBindJSON(&apiReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user, err := h.service.UpdateUser(userID.(string), req)
+	// Convert API request to service request
+	serviceReq := u.UpdateUserRequest{
+		Username: apiReq.Username,
+		Password: apiReq.Password,
+	}
+
+	user, err := h.service.UpdateUser(userID.(string), serviceReq)
 	if err != nil {
 		if err.Error() == "username already exists" {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

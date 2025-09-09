@@ -14,6 +14,7 @@ type Router struct {
 	uh *UserHandlers
 	mh *MessageHandlers
 	sh *SearchHandlers
+	audh *AuditHandlers
 	am *a.AuthMiddleware
 	// Rate limiters for different endpoint types
 	authRateLimit     *middleware.IPRateLimiter
@@ -28,6 +29,7 @@ func NewRouter(db *gorm.DB) *Router {
 		uh: NewUserHandlers(db),
 		mh: NewMessageHandlers(db),
 		sh: NewSearchHandlers(db),
+		audh: NewAuditHandlers(db),
 		am: a.NewAuthMiddleware(),
 		// Initialize rate limiters with different configurations
 		authRateLimit:     middleware.NewIPRateLimiter(middleware.StrictRateLimit),
@@ -74,9 +76,11 @@ func (r *Router) RegisterRoutes(router *gin.Engine) {
 		readOnly.GET("/channels/:id/users", r.ch.GetChannelUsersHandler)
 		readOnly.GET("/channels/:id/bans", r.ch.GetChannelBansHandler)
 		readOnly.GET("/channels/:id/messages", r.mh.GetChannelMessagesHandler)
+		readOnly.GET("/channels/:id/audit", r.audh.GetChannelAuditLogsHandler)
 		readOnly.GET("/search/users", r.sh.SearchUsersHandler)
 		readOnly.GET("/search/channels", r.sh.SearchChannelsHandler)
 		readOnly.GET("/search/messages", r.sh.SearchMessagesHandler)
+		readOnly.GET("/audit", r.audh.GetAuditLogsHandler)
 	}
 	
 	{

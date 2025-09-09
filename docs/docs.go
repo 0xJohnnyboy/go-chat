@@ -24,6 +24,90 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/audit": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Get audit logs with optional filtering (system admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit Logs"
+                ],
+                "summary": "Get audit logs with filtering",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by channel ID",
+                        "name": "channel_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by actor ID",
+                        "name": "actor_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by action type",
+                        "name": "action",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page (default: 20, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Audit logs retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.AuditLogsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Admin access required",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/channels": {
             "get": {
                 "security": [
@@ -46,13 +130,13 @@ const docTemplate = `{
                     "200": {
                         "description": "List of visible channels",
                         "schema": {
-                            "$ref": "#/definitions/api.ChannelsResponse"
+                            "$ref": "#/definitions/internal_api.ChannelsResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -81,7 +165,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CreateChannelRequest"
+                            "$ref": "#/definitions/internal_api.CreateChannelRequest"
                         }
                     }
                 ],
@@ -89,19 +173,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Channel created successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.ChannelResponse"
+                            "$ref": "#/definitions/internal_api.ChannelResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -129,19 +213,19 @@ const docTemplate = `{
                     "200": {
                         "description": "List of user's channels",
                         "schema": {
-                            "$ref": "#/definitions/api.ChannelsResponse"
+                            "$ref": "#/definitions/internal_api.ChannelsResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -178,19 +262,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Channel details",
                         "schema": {
-                            "$ref": "#/definitions/api.ChannelResponse"
+                            "$ref": "#/definitions/internal_api.ChannelResponse"
                         }
                     },
                     "400": {
                         "description": "Channel ID required",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Channel not found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -225,19 +309,98 @@ const docTemplate = `{
                     "200": {
                         "description": "Channel deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request or not authorized",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/channels/{id}/audit": {
+            "get": {
+                "security": [
+                    {
+                        "CookieAuth": []
+                    }
+                ],
+                "description": "Get audit logs for a specific channel (only channel owners can view)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit Logs"
+                ],
+                "summary": "Get channel audit logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Channel ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of results per page (default: 20, max: 100)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Audit logs retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.AuditLogsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "User not authenticated",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Only channel owners can view audit logs",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Channel not found",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -275,7 +438,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.BanUserRequest"
+                            "$ref": "#/definitions/internal_api.BanUserRequest"
                         }
                     }
                 ],
@@ -283,25 +446,25 @@ const docTemplate = `{
                     "200": {
                         "description": "User banned successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Only channel owner can ban users",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -345,25 +508,25 @@ const docTemplate = `{
                     "200": {
                         "description": "User unbanned successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Only channel owner can unban users",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -400,31 +563,31 @@ const docTemplate = `{
                     "200": {
                         "description": "List of channel bans",
                         "schema": {
-                            "$ref": "#/definitions/api.BansResponse"
+                            "$ref": "#/definitions/internal_api.BansResponse"
                         }
                     },
                     "400": {
                         "description": "Channel ID required",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Only channel owner can view bans",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -462,7 +625,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.RoleUpdateRequest"
+                            "$ref": "#/definitions/internal_api.RoleUpdateRequest"
                         }
                     }
                 ],
@@ -470,31 +633,31 @@ const docTemplate = `{
                     "200": {
                         "description": "User demoted successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Only channel owners can demote users",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Channel or user not found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -532,7 +695,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.JoinChannelRequest"
+                            "$ref": "#/definitions/internal_api.JoinChannelRequest"
                         }
                     }
                 ],
@@ -540,19 +703,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Successfully joined channel",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request or incorrect password",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -589,19 +752,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Successfully left channel",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -656,31 +819,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Messages retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessagesResponse"
+                            "$ref": "#/definitions/internal_api.MessagesResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "You are not a member of this channel",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Channel not found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -718,7 +881,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.RoleUpdateRequest"
+                            "$ref": "#/definitions/internal_api.RoleUpdateRequest"
                         }
                     }
                 ],
@@ -726,31 +889,31 @@ const docTemplate = `{
                     "200": {
                         "description": "User promoted successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Only channel owners can promote users",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Channel or user not found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -788,7 +951,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.TempBanUserRequest"
+                            "$ref": "#/definitions/internal_api.TempBanUserRequest"
                         }
                     }
                 ],
@@ -796,25 +959,25 @@ const docTemplate = `{
                     "200": {
                         "description": "User temporarily banned successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request or invalid duration format",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Only channel owner can ban users",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -851,19 +1014,19 @@ const docTemplate = `{
                     "200": {
                         "description": "List of channel users",
                         "schema": {
-                            "$ref": "#/definitions/api.UsersResponse"
+                            "$ref": "#/definitions/internal_api.UsersResponse"
                         }
                     },
                     "400": {
                         "description": "Channel ID required",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -891,7 +1054,7 @@ const docTemplate = `{
                     "200": {
                         "description": "User logged out successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     }
                 }
@@ -919,19 +1082,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Token refreshed successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "401": {
                         "description": "Invalid or missing refresh token",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -974,19 +1137,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Channels found",
                         "schema": {
-                            "$ref": "#/definitions/api.ChannelsSearchResponse"
+                            "$ref": "#/definitions/internal_api.ChannelsSearchResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request - invalid query",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -1036,31 +1199,31 @@ const docTemplate = `{
                     "200": {
                         "description": "Messages found",
                         "schema": {
-                            "$ref": "#/definitions/api.MessagesSearchResponse"
+                            "$ref": "#/definitions/internal_api.MessagesSearchResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request - invalid query or channel_id",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "You are not a member of this channel",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Channel not found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -1103,19 +1266,19 @@ const docTemplate = `{
                     "200": {
                         "description": "Users found",
                         "schema": {
-                            "$ref": "#/definitions/api.UsersSearchResponse"
+                            "$ref": "#/definitions/internal_api.UsersSearchResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request - invalid query",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -1143,25 +1306,25 @@ const docTemplate = `{
                     "200": {
                         "description": "Account deleted successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.MessageResponse"
+                            "$ref": "#/definitions/internal_api.MessageResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -1190,7 +1353,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.UpdateUserRequest"
+                            "$ref": "#/definitions/internal_api.UpdateUserRequest"
                         }
                     }
                 ],
@@ -1198,31 +1361,31 @@ const docTemplate = `{
                     "200": {
                         "description": "User updated successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.UpdateUserResponse"
+                            "$ref": "#/definitions/internal_api.UpdateUserResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request or username already exists",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -1250,19 +1413,19 @@ const docTemplate = `{
                     "200": {
                         "description": "List of joined channels",
                         "schema": {
-                            "$ref": "#/definitions/api.ChannelsResponse"
+                            "$ref": "#/definitions/internal_api.ChannelsResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -1290,19 +1453,19 @@ const docTemplate = `{
                     "200": {
                         "description": "List of owned channels",
                         "schema": {
-                            "$ref": "#/definitions/api.ChannelsResponse"
+                            "$ref": "#/definitions/internal_api.ChannelsResponse"
                         }
                     },
                     "401": {
                         "description": "User not authenticated",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -1348,7 +1511,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UserLoginInput"
+                            "$ref": "#/definitions/internal_api.UserLoginInput"
                         }
                     }
                 ],
@@ -1356,19 +1519,19 @@ const docTemplate = `{
                     "200": {
                         "description": "User logged in successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.AuthResponse"
+                            "$ref": "#/definitions/internal_api.AuthResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid credentials",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -1394,7 +1557,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.UserRegisterInput"
+                            "$ref": "#/definitions/internal_api.UserRegisterInput"
                         }
                     }
                 ],
@@ -1402,19 +1565,19 @@ const docTemplate = `{
                     "200": {
                         "description": "User registered successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.AuthResponse"
+                            "$ref": "#/definitions/internal_api.AuthResponse"
                         }
                     },
                     "400": {
                         "description": "Bad request",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/api.ErrorResponse"
+                            "$ref": "#/definitions/internal_api.ErrorResponse"
                         }
                     }
                 }
@@ -1422,7 +1585,103 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "api.AuthResponse": {
+        "internal_api.AuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "BAN_USER"
+                },
+                "actor": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "example": "abc12345"
+                        },
+                        "username": {
+                            "type": "string",
+                            "example": "admin_user"
+                        }
+                    }
+                },
+                "actor_id": {
+                    "type": "string",
+                    "example": "abc12345"
+                },
+                "channel": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "example": "xyz123"
+                        },
+                        "name": {
+                            "type": "string",
+                            "example": "general"
+                        }
+                    }
+                },
+                "channel_id": {
+                    "type": "string",
+                    "example": "xyz123"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2023-01-01T00:00:00Z"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Banned user from channel"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "target": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "example": "def67890"
+                        },
+                        "username": {
+                            "type": "string",
+                            "example": "banned_user"
+                        }
+                    }
+                },
+                "target_id": {
+                    "type": "string",
+                    "example": "def67890"
+                }
+            }
+        },
+        "internal_api.AuditLogsResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "logs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api.AuditLogResponse"
+                    }
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_api.AuthResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -1430,11 +1689,11 @@ const docTemplate = `{
                     "example": "Register successful"
                 },
                 "user": {
-                    "$ref": "#/definitions/api.UserResponse"
+                    "$ref": "#/definitions/internal_api.UserResponse"
                 }
             }
         },
-        "api.BanInfo": {
+        "internal_api.BanInfo": {
             "type": "object",
             "properties": {
                 "banned_at": {
@@ -1442,7 +1701,7 @@ const docTemplate = `{
                     "example": "2023-01-01T00:00:00Z"
                 },
                 "banned_by": {
-                    "$ref": "#/definitions/api.UserInfo"
+                    "$ref": "#/definitions/internal_api.UserInfo"
                 },
                 "expires_at": {
                     "type": "string",
@@ -1461,7 +1720,7 @@ const docTemplate = `{
                     "example": "spam"
                 },
                 "user": {
-                    "$ref": "#/definitions/api.UserInfo"
+                    "$ref": "#/definitions/internal_api.UserInfo"
                 },
                 "user_id": {
                     "type": "string",
@@ -1469,7 +1728,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.BanUserRequest": {
+        "internal_api.BanUserRequest": {
             "type": "object",
             "required": [
                 "user_id"
@@ -1485,18 +1744,18 @@ const docTemplate = `{
                 }
             }
         },
-        "api.BansResponse": {
+        "internal_api.BansResponse": {
             "type": "object",
             "properties": {
                 "bans": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.BanInfo"
+                        "$ref": "#/definitions/internal_api.BanInfo"
                     }
                 }
             }
         },
-        "api.ChannelInfo": {
+        "internal_api.ChannelInfo": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -1516,11 +1775,11 @@ const docTemplate = `{
                     "example": "general"
                 },
                 "owner": {
-                    "$ref": "#/definitions/api.ChannelOwner"
+                    "$ref": "#/definitions/internal_api.ChannelOwner"
                 }
             }
         },
-        "api.ChannelOwner": {
+        "internal_api.ChannelOwner": {
             "type": "object",
             "properties": {
                 "id": {
@@ -1533,15 +1792,15 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ChannelResponse": {
+        "internal_api.ChannelResponse": {
             "type": "object",
             "properties": {
                 "channel": {
-                    "$ref": "#/definitions/api.ChannelInfo"
+                    "$ref": "#/definitions/internal_api.ChannelInfo"
                 }
             }
         },
-        "api.ChannelSearchResult": {
+        "internal_api.ChannelSearchResult": {
             "type": "object",
             "properties": {
                 "id": {
@@ -1566,24 +1825,24 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ChannelsResponse": {
+        "internal_api.ChannelsResponse": {
             "type": "object",
             "properties": {
                 "channels": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.ChannelInfo"
+                        "$ref": "#/definitions/internal_api.ChannelInfo"
                     }
                 }
             }
         },
-        "api.ChannelsSearchResponse": {
+        "internal_api.ChannelsSearchResponse": {
             "type": "object",
             "properties": {
                 "channels": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.ChannelSearchResult"
+                        "$ref": "#/definitions/internal_api.ChannelSearchResult"
                     }
                 },
                 "total": {
@@ -1591,7 +1850,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateChannelRequest": {
+        "internal_api.CreateChannelRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -1611,7 +1870,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ErrorResponse": {
+        "internal_api.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -1620,7 +1879,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.JoinChannelRequest": {
+        "internal_api.JoinChannelRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -1629,7 +1888,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.MessageInfo": {
+        "internal_api.MessageInfo": {
             "type": "object",
             "properties": {
                 "channel_id": {
@@ -1660,7 +1919,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.MessageResponse": {
+        "internal_api.MessageResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -1669,7 +1928,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.MessageSearchResult": {
+        "internal_api.MessageSearchResult": {
             "type": "object",
             "properties": {
                 "channel_id": {
@@ -1700,7 +1959,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.MessagesResponse": {
+        "internal_api.MessagesResponse": {
             "type": "object",
             "properties": {
                 "has_more": {
@@ -1709,7 +1968,7 @@ const docTemplate = `{
                 "messages": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.MessageInfo"
+                        "$ref": "#/definitions/internal_api.MessageInfo"
                     }
                 },
                 "total": {
@@ -1717,13 +1976,13 @@ const docTemplate = `{
                 }
             }
         },
-        "api.MessagesSearchResponse": {
+        "internal_api.MessagesSearchResponse": {
             "type": "object",
             "properties": {
                 "messages": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.MessageSearchResult"
+                        "$ref": "#/definitions/internal_api.MessageSearchResult"
                     }
                 },
                 "total": {
@@ -1731,7 +1990,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.RoleUpdateRequest": {
+        "internal_api.RoleUpdateRequest": {
             "type": "object",
             "required": [
                 "role",
@@ -1748,7 +2007,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.TempBanUserRequest": {
+        "internal_api.TempBanUserRequest": {
             "type": "object",
             "required": [
                 "duration",
@@ -1770,115 +2029,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.UpdateUserResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "User updated successfully"
-                },
-                "user": {
-                    "$ref": "#/definitions/api.UserResponse"
-                }
-            }
-        },
-        "api.UserInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "example": "a1b2c3d4"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "john_doe"
-                }
-            }
-        },
-        "api.UserLoginInput": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "example": "securePassword123"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "john_doe"
-                }
-            }
-        },
-        "api.UserRegisterInput": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "example": "securePassword123"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "john_doe"
-                }
-            }
-        },
-        "api.UserResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "example": "a1b2c3d4"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "john_doe"
-                }
-            }
-        },
-        "api.UserSearchResult": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.UsersResponse": {
-            "type": "object",
-            "properties": {
-                "users": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.UserInfo"
-                    }
-                }
-            }
-        },
-        "api.UsersSearchResponse": {
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "integer"
-                },
-                "users": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.UserSearchResult"
-                    }
-                }
-            }
-        },
-        "user.UpdateUserRequest": {
+        "internal_api.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -1888,6 +2039,114 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "new_username"
+                }
+            }
+        },
+        "internal_api.UpdateUserResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "User updated successfully"
+                },
+                "user": {
+                    "$ref": "#/definitions/internal_api.UserResponse"
+                }
+            }
+        },
+        "internal_api.UserInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "a1b2c3d4"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john_doe"
+                }
+            }
+        },
+        "internal_api.UserLoginInput": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "securePassword123"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john_doe"
+                }
+            }
+        },
+        "internal_api.UserRegisterInput": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "securePassword123"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john_doe"
+                }
+            }
+        },
+        "internal_api.UserResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "a1b2c3d4"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "john_doe"
+                }
+            }
+        },
+        "internal_api.UserSearchResult": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api.UsersResponse": {
+            "type": "object",
+            "properties": {
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api.UserInfo"
+                    }
+                }
+            }
+        },
+        "internal_api.UsersSearchResponse": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api.UserSearchResult"
+                    }
                 }
             }
         }

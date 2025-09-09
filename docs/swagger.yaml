@@ -1,20 +1,87 @@
 basePath: /
 definitions:
-  api.AuthResponse:
+  internal_api.AuditLogResponse:
+    properties:
+      action:
+        example: BAN_USER
+        type: string
+      actor:
+        properties:
+          id:
+            example: abc12345
+            type: string
+          username:
+            example: admin_user
+            type: string
+        type: object
+      actor_id:
+        example: abc12345
+        type: string
+      channel:
+        properties:
+          id:
+            example: xyz123
+            type: string
+          name:
+            example: general
+            type: string
+        type: object
+      channel_id:
+        example: xyz123
+        type: string
+      created_at:
+        example: "2023-01-01T00:00:00Z"
+        type: string
+      description:
+        example: Banned user from channel
+        type: string
+      id:
+        example: 1
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      target:
+        properties:
+          id:
+            example: def67890
+            type: string
+          username:
+            example: banned_user
+            type: string
+        type: object
+      target_id:
+        example: def67890
+        type: string
+    type: object
+  internal_api.AuditLogsResponse:
+    properties:
+      limit:
+        type: integer
+      logs:
+        items:
+          $ref: '#/definitions/internal_api.AuditLogResponse'
+        type: array
+      page:
+        type: integer
+      total:
+        type: integer
+    type: object
+  internal_api.AuthResponse:
     properties:
       message:
         example: Register successful
         type: string
       user:
-        $ref: '#/definitions/api.UserResponse'
+        $ref: '#/definitions/internal_api.UserResponse'
     type: object
-  api.BanInfo:
+  internal_api.BanInfo:
     properties:
       banned_at:
         example: "2023-01-01T00:00:00Z"
         type: string
       banned_by:
-        $ref: '#/definitions/api.UserInfo'
+        $ref: '#/definitions/internal_api.UserInfo'
       expires_at:
         example: "2023-01-02T00:00:00Z"
         type: string
@@ -28,12 +95,12 @@ definitions:
         example: spam
         type: string
       user:
-        $ref: '#/definitions/api.UserInfo'
+        $ref: '#/definitions/internal_api.UserInfo'
       user_id:
         example: a1b2c3d4
         type: string
     type: object
-  api.BanUserRequest:
+  internal_api.BanUserRequest:
     properties:
       reason:
         example: spam
@@ -44,14 +111,14 @@ definitions:
     required:
     - user_id
     type: object
-  api.BansResponse:
+  internal_api.BansResponse:
     properties:
       bans:
         items:
-          $ref: '#/definitions/api.BanInfo'
+          $ref: '#/definitions/internal_api.BanInfo'
         type: array
     type: object
-  api.ChannelInfo:
+  internal_api.ChannelInfo:
     properties:
       created_at:
         example: "2023-01-01T00:00:00Z"
@@ -66,9 +133,9 @@ definitions:
         example: general
         type: string
       owner:
-        $ref: '#/definitions/api.ChannelOwner'
+        $ref: '#/definitions/internal_api.ChannelOwner'
     type: object
-  api.ChannelOwner:
+  internal_api.ChannelOwner:
     properties:
       id:
         example: a1b2c3d4
@@ -77,12 +144,12 @@ definitions:
         example: john_doe
         type: string
     type: object
-  api.ChannelResponse:
+  internal_api.ChannelResponse:
     properties:
       channel:
-        $ref: '#/definitions/api.ChannelInfo'
+        $ref: '#/definitions/internal_api.ChannelInfo'
     type: object
-  api.ChannelSearchResult:
+  internal_api.ChannelSearchResult:
     properties:
       id:
         type: string
@@ -98,23 +165,23 @@ definitions:
             type: string
         type: object
     type: object
-  api.ChannelsResponse:
+  internal_api.ChannelsResponse:
     properties:
       channels:
         items:
-          $ref: '#/definitions/api.ChannelInfo'
+          $ref: '#/definitions/internal_api.ChannelInfo'
         type: array
     type: object
-  api.ChannelsSearchResponse:
+  internal_api.ChannelsSearchResponse:
     properties:
       channels:
         items:
-          $ref: '#/definitions/api.ChannelSearchResult'
+          $ref: '#/definitions/internal_api.ChannelSearchResult'
         type: array
       total:
         type: integer
     type: object
-  api.CreateChannelRequest:
+  internal_api.CreateChannelRequest:
     properties:
       is_visible:
         example: true
@@ -128,19 +195,19 @@ definitions:
     required:
     - name
     type: object
-  api.ErrorResponse:
+  internal_api.ErrorResponse:
     properties:
       error:
         example: username cannot be empty
         type: string
     type: object
-  api.JoinChannelRequest:
+  internal_api.JoinChannelRequest:
     properties:
       password:
         example: secretpass
         type: string
     type: object
-  api.MessageInfo:
+  internal_api.MessageInfo:
     properties:
       channel_id:
         type: string
@@ -160,13 +227,13 @@ definitions:
       user_id:
         type: string
     type: object
-  api.MessageResponse:
+  internal_api.MessageResponse:
     properties:
       message:
         example: Logged out
         type: string
     type: object
-  api.MessageSearchResult:
+  internal_api.MessageSearchResult:
     properties:
       channel_id:
         type: string
@@ -186,27 +253,27 @@ definitions:
       user_id:
         type: string
     type: object
-  api.MessagesResponse:
+  internal_api.MessagesResponse:
     properties:
       has_more:
         type: boolean
       messages:
         items:
-          $ref: '#/definitions/api.MessageInfo'
+          $ref: '#/definitions/internal_api.MessageInfo'
         type: array
       total:
         type: integer
     type: object
-  api.MessagesSearchResponse:
+  internal_api.MessagesSearchResponse:
     properties:
       messages:
         items:
-          $ref: '#/definitions/api.MessageSearchResult'
+          $ref: '#/definitions/internal_api.MessageSearchResult'
         type: array
       total:
         type: integer
     type: object
-  api.RoleUpdateRequest:
+  internal_api.RoleUpdateRequest:
     properties:
       role:
         example: Moderator
@@ -218,7 +285,7 @@ definitions:
     - role
     - user_id
     type: object
-  api.TempBanUserRequest:
+  internal_api.TempBanUserRequest:
     properties:
       duration:
         description: e.g., "24h", "30m"
@@ -234,80 +301,7 @@ definitions:
     - duration
     - user_id
     type: object
-  api.UpdateUserResponse:
-    properties:
-      message:
-        example: User updated successfully
-        type: string
-      user:
-        $ref: '#/definitions/api.UserResponse'
-    type: object
-  api.UserInfo:
-    properties:
-      id:
-        example: a1b2c3d4
-        type: string
-      username:
-        example: john_doe
-        type: string
-    type: object
-  api.UserLoginInput:
-    properties:
-      password:
-        example: securePassword123
-        type: string
-      username:
-        example: john_doe
-        type: string
-    required:
-    - password
-    - username
-    type: object
-  api.UserRegisterInput:
-    properties:
-      password:
-        example: securePassword123
-        type: string
-      username:
-        example: john_doe
-        type: string
-    required:
-    - password
-    - username
-    type: object
-  api.UserResponse:
-    properties:
-      id:
-        example: a1b2c3d4
-        type: string
-      username:
-        example: john_doe
-        type: string
-    type: object
-  api.UserSearchResult:
-    properties:
-      id:
-        type: string
-      username:
-        type: string
-    type: object
-  api.UsersResponse:
-    properties:
-      users:
-        items:
-          $ref: '#/definitions/api.UserInfo'
-        type: array
-    type: object
-  api.UsersSearchResponse:
-    properties:
-      total:
-        type: integer
-      users:
-        items:
-          $ref: '#/definitions/api.UserSearchResult'
-        type: array
-    type: object
-  user.UpdateUserRequest:
+  internal_api.UpdateUserRequest:
     properties:
       password:
         example: newPassword123
@@ -315,6 +309,79 @@ definitions:
       username:
         example: new_username
         type: string
+    type: object
+  internal_api.UpdateUserResponse:
+    properties:
+      message:
+        example: User updated successfully
+        type: string
+      user:
+        $ref: '#/definitions/internal_api.UserResponse'
+    type: object
+  internal_api.UserInfo:
+    properties:
+      id:
+        example: a1b2c3d4
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  internal_api.UserLoginInput:
+    properties:
+      password:
+        example: securePassword123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  internal_api.UserRegisterInput:
+    properties:
+      password:
+        example: securePassword123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  internal_api.UserResponse:
+    properties:
+      id:
+        example: a1b2c3d4
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  internal_api.UserSearchResult:
+    properties:
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+  internal_api.UsersResponse:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/internal_api.UserInfo'
+        type: array
+    type: object
+  internal_api.UsersSearchResponse:
+    properties:
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/internal_api.UserSearchResult'
+        type: array
     type: object
 host: localhost:9876
 info:
@@ -331,6 +398,60 @@ info:
   title: Go Chat API
   version: "1.0"
 paths:
+  /api/audit:
+    get:
+      consumes:
+      - application/json
+      description: Get audit logs with optional filtering (system admin only)
+      parameters:
+      - description: Filter by channel ID
+        in: query
+        name: channel_id
+        type: string
+      - description: Filter by actor ID
+        in: query
+        name: actor_id
+        type: string
+      - description: Filter by action type
+        in: query
+        name: action
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Number of results per page (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Audit logs retrieved successfully
+          schema:
+            $ref: '#/definitions/internal_api.AuditLogsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "403":
+          description: Admin access required
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Get audit logs with filtering
+      tags:
+      - Audit Logs
   /api/channels:
     get:
       consumes:
@@ -342,11 +463,11 @@ paths:
         "200":
           description: List of visible channels
           schema:
-            $ref: '#/definitions/api.ChannelsResponse'
+            $ref: '#/definitions/internal_api.ChannelsResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Get all visible channels
@@ -362,22 +483,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.CreateChannelRequest'
+          $ref: '#/definitions/internal_api.CreateChannelRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Channel created successfully
           schema:
-            $ref: '#/definitions/api.ChannelResponse'
+            $ref: '#/definitions/internal_api.ChannelResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Create a new channel
@@ -400,15 +521,15 @@ paths:
         "200":
           description: Channel deleted successfully
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "400":
           description: Bad request or not authorized
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Delete a channel
@@ -430,20 +551,72 @@ paths:
         "200":
           description: Channel details
           schema:
-            $ref: '#/definitions/api.ChannelResponse'
+            $ref: '#/definitions/internal_api.ChannelResponse'
         "400":
           description: Channel ID required
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "404":
           description: Channel not found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Get channel details
       tags:
       - Channels
+  /api/channels/{id}/audit:
+    get:
+      consumes:
+      - application/json
+      description: Get audit logs for a specific channel (only channel owners can
+        view)
+      parameters:
+      - description: Channel ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Number of results per page (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Audit logs retrieved successfully
+          schema:
+            $ref: '#/definitions/internal_api.AuditLogsResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "401":
+          description: User not authenticated
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "403":
+          description: Only channel owners can view audit logs
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "404":
+          description: Channel not found
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/internal_api.ErrorResponse'
+      security:
+      - CookieAuth: []
+      summary: Get channel audit logs
+      tags:
+      - Audit Logs
   /api/channels/{id}/ban:
     post:
       consumes:
@@ -460,26 +633,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.BanUserRequest'
+          $ref: '#/definitions/internal_api.BanUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: User banned successfully
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "403":
           description: Only channel owner can ban users
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Ban user from channel
@@ -508,19 +681,19 @@ paths:
         "200":
           description: User unbanned successfully
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "403":
           description: Only channel owner can unban users
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Unban user from channel
@@ -544,23 +717,23 @@ paths:
         "200":
           description: List of channel bans
           schema:
-            $ref: '#/definitions/api.BansResponse'
+            $ref: '#/definitions/internal_api.BansResponse'
         "400":
           description: Channel ID required
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "403":
           description: Only channel owner can view bans
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Get channel bans
@@ -583,30 +756,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.RoleUpdateRequest'
+          $ref: '#/definitions/internal_api.RoleUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: User demoted successfully
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "403":
           description: Only channel owners can demote users
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "404":
           description: Channel or user not found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Demote user in channel
@@ -628,22 +801,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.JoinChannelRequest'
+          $ref: '#/definitions/internal_api.JoinChannelRequest'
       produces:
       - application/json
       responses:
         "200":
           description: Successfully joined channel
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "400":
           description: Bad request or incorrect password
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Join a channel
@@ -666,15 +839,15 @@ paths:
         "200":
           description: Successfully left channel
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Leave a channel
@@ -709,23 +882,23 @@ paths:
         "200":
           description: Messages retrieved successfully
           schema:
-            $ref: '#/definitions/api.MessagesResponse'
+            $ref: '#/definitions/internal_api.MessagesResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "403":
           description: You are not a member of this channel
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "404":
           description: Channel not found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Get channel message history
@@ -748,30 +921,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.RoleUpdateRequest'
+          $ref: '#/definitions/internal_api.RoleUpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: User promoted successfully
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "403":
           description: Only channel owners can promote users
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "404":
           description: Channel or user not found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Promote user in channel
@@ -794,26 +967,26 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.TempBanUserRequest'
+          $ref: '#/definitions/internal_api.TempBanUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: User temporarily banned successfully
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "400":
           description: Bad request or invalid duration format
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "403":
           description: Only channel owner can ban users
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Temporarily ban user from channel
@@ -836,15 +1009,15 @@ paths:
         "200":
           description: List of channel users
           schema:
-            $ref: '#/definitions/api.UsersResponse'
+            $ref: '#/definitions/internal_api.UsersResponse'
         "400":
           description: Channel ID required
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Get channel users
@@ -861,15 +1034,15 @@ paths:
         "200":
           description: List of user's channels
           schema:
-            $ref: '#/definitions/api.ChannelsResponse'
+            $ref: '#/definitions/internal_api.ChannelsResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Get user's channels
@@ -886,7 +1059,7 @@ paths:
         "200":
           description: User logged out successfully
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
       security:
       - CookieAuth: []
       summary: Logout user
@@ -903,15 +1076,15 @@ paths:
         "200":
           description: Token refreshed successfully
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "401":
           description: Invalid or missing refresh token
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Refresh JWT token
@@ -938,15 +1111,15 @@ paths:
         "200":
           description: Channels found
           schema:
-            $ref: '#/definitions/api.ChannelsSearchResponse'
+            $ref: '#/definitions/internal_api.ChannelsSearchResponse'
         "400":
           description: Bad request - invalid query
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Search channels
@@ -979,23 +1152,23 @@ paths:
         "200":
           description: Messages found
           schema:
-            $ref: '#/definitions/api.MessagesSearchResponse'
+            $ref: '#/definitions/internal_api.MessagesSearchResponse'
         "400":
           description: Bad request - invalid query or channel_id
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "403":
           description: You are not a member of this channel
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "404":
           description: Channel not found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Search messages
@@ -1022,15 +1195,15 @@ paths:
         "200":
           description: Users found
           schema:
-            $ref: '#/definitions/api.UsersSearchResponse'
+            $ref: '#/definitions/internal_api.UsersSearchResponse'
         "400":
           description: Bad request - invalid query
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Search users
@@ -1047,19 +1220,19 @@ paths:
         "200":
           description: Account deleted successfully
           schema:
-            $ref: '#/definitions/api.MessageResponse'
+            $ref: '#/definitions/internal_api.MessageResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "404":
           description: User not found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Delete user account
@@ -1075,30 +1248,30 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/user.UpdateUserRequest'
+          $ref: '#/definitions/internal_api.UpdateUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: User updated successfully
           schema:
-            $ref: '#/definitions/api.UpdateUserResponse'
+            $ref: '#/definitions/internal_api.UpdateUserResponse'
         "400":
           description: Bad request or username already exists
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "404":
           description: User not found
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Update user information
@@ -1115,15 +1288,15 @@ paths:
         "200":
           description: List of joined channels
           schema:
-            $ref: '#/definitions/api.ChannelsResponse'
+            $ref: '#/definitions/internal_api.ChannelsResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Get joined channels
@@ -1140,15 +1313,15 @@ paths:
         "200":
           description: List of owned channels
           schema:
-            $ref: '#/definitions/api.ChannelsResponse'
+            $ref: '#/definitions/internal_api.ChannelsResponse'
         "401":
           description: User not authenticated
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       security:
       - CookieAuth: []
       summary: Get owned channels
@@ -1178,22 +1351,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UserLoginInput'
+          $ref: '#/definitions/internal_api.UserLoginInput'
       produces:
       - application/json
       responses:
         "200":
           description: User logged in successfully
           schema:
-            $ref: '#/definitions/api.AuthResponse'
+            $ref: '#/definitions/internal_api.AuthResponse'
         "400":
           description: Invalid credentials
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Login user
       tags:
       - Authentication
@@ -1208,22 +1381,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/api.UserRegisterInput'
+          $ref: '#/definitions/internal_api.UserRegisterInput'
       produces:
       - application/json
       responses:
         "200":
           description: User registered successfully
           schema:
-            $ref: '#/definitions/api.AuthResponse'
+            $ref: '#/definitions/internal_api.AuthResponse'
         "400":
           description: Bad request
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/api.ErrorResponse'
+            $ref: '#/definitions/internal_api.ErrorResponse'
       summary: Register a new user
       tags:
       - Authentication

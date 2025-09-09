@@ -4,17 +4,22 @@ import (
 	"errors"
 	"time"
 
+	a "go-chat/internal/audit"
 	. "go-chat/internal/utils"
 	. "go-chat/pkg/chat"
 	"gorm.io/gorm"
 )
 
 type ChannelService struct {
-	db *gorm.DB
+	db           *gorm.DB
+	auditService *a.AuditService
 }
 
 func NewChannelService(db *gorm.DB) *ChannelService {
-	return &ChannelService{db: db}
+	return &ChannelService{
+		db:           db,
+		auditService: a.NewAuditService(db),
+	}
 }
 
 func (s *ChannelService) CreateChannel(ownerID, name string, password *string, isVisible bool) (*Channel, error) {
@@ -57,6 +62,13 @@ func (s *ChannelService) CreateChannel(ownerID, name string, password *string, i
 
 	if err := s.db.Create(&userChannel).Error; err != nil {
 		return nil, err
+	}
+
+	// Log channel creation
+	hasPassword := password != nil && *password != ""
+	if err := s.auditService.LogChannelCreation(ownerID, channel.ID, channel.Name, isVisible, hasPassword); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
 	}
 
 	return &channel, nil
@@ -121,7 +133,17 @@ func (s *ChannelService) JoinChannel(userID, channelID string, password *string)
 		RoleID:    &memberRole.ID,
 	}
 
-	return s.db.Create(&userChannel).Error
+	if err := s.db.Create(&userChannel).Error; err != nil {
+		return err
+	}
+
+	// Log channel join
+	if err := s.auditService.LogChannelJoin(userID, channelID, channel.Name); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
+	}
+
+	return nil
 }
 
 func (s *ChannelService) LeaveChannel(userID, channelID string) error {
@@ -134,7 +156,17 @@ func (s *ChannelService) LeaveChannel(userID, channelID string) error {
 		return errors.New("channel owner cannot leave channel")
 	}
 
-	return s.db.Where("user_id = ? AND channel_id = ?", userID, channelID).Delete(&UserChannel{}).Error
+	if err := s.db.Where("user_id = ? AND channel_id = ?", userID, channelID).Delete(&UserChannel{}).Error; err != nil {
+		return err
+	}
+
+	// Log channel leave
+	if err := s.auditService.LogChannelLeave(userID, channelID, channel.Name); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
+	}
+
+	return nil
 }
 
 func (s *ChannelService) DeleteChannel(userID, channelID string) error {
@@ -147,13 +179,25 @@ func (s *ChannelService) DeleteChannel(userID, channelID string) error {
 		return errors.New("only channel owner can delete channel")
 	}
 
+	channelName := channel.Name // Store name before deletion
+
 	// Delete all user-channel relationships first
 	if err := s.db.Where("channel_id = ?", channelID).Delete(&UserChannel{}).Error; err != nil {
 		return err
 	}
 
 	// Delete the channel
-	return s.db.Delete(&Channel{}, "id = ?", channelID).Error
+	if err := s.db.Delete(&Channel{}, "id = ?", channelID).Error; err != nil {
+		return err
+	}
+
+	// Log channel deletion
+	if err := s.auditService.LogChannelDeletion(userID, channelID, channelName); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
+	}
+
+	return nil
 }
 
 func (s *ChannelService) GetChannelUsers(channelID string) ([]User, error) {
@@ -218,7 +262,17 @@ func (s *ChannelService) BanUser(adminID, userID, channelID, reason string) erro
 	}
 
 	// Remove user from channel
-	return s.db.Delete(&userChannel).Error
+	if err := s.db.Delete(&userChannel).Error; err != nil {
+		return err
+	}
+
+	// Log user ban
+	if err := s.auditService.LogUserBan(adminID, userID, channelID, reason, false, nil); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
+	}
+
+	return nil
 }
 
 func (s *ChannelService) TempBanUser(adminID, userID, channelID, reason string, duration time.Duration) error {
@@ -276,7 +330,17 @@ func (s *ChannelService) TempBanUser(adminID, userID, channelID, reason string, 
 	}
 
 	// Remove user from channel
-	return s.db.Delete(&userChannel).Error
+	if err := s.db.Delete(&userChannel).Error; err != nil {
+		return err
+	}
+
+	// Log temporary user ban
+	if err := s.auditService.LogUserBan(adminID, userID, channelID, reason, true, &expiresAt); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
+	}
+
+	return nil
 }
 
 func (s *ChannelService) UnbanUser(adminID, userID, channelID string) error {
@@ -303,7 +367,17 @@ func (s *ChannelService) UnbanUser(adminID, userID, channelID string) error {
 
 	// Deactivate the ban
 	ban.IsActive = false
-	return s.db.Save(&ban).Error
+	if err := s.db.Save(&ban).Error; err != nil {
+		return err
+	}
+
+	// Log user unban
+	if err := s.auditService.LogUserUnban(adminID, userID, channelID); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
+	}
+
+	return nil
 }
 
 func (s *ChannelService) IsUserBanned(userID, channelID string) (bool, error) {
@@ -361,11 +435,17 @@ func (s *ChannelService) PromoteUser(requesterID, channelID, targetUserID, roleN
 
 	// Check if target user exists in the channel
 	var userChannel UserChannel
-	if err := s.db.Where("user_id = ? AND channel_id = ?", targetUserID, channelID).First(&userChannel).Error; err != nil {
+	if err := s.db.Preload("Role").Where("user_id = ? AND channel_id = ?", targetUserID, channelID).First(&userChannel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("user not found in channel")
 		}
 		return err
+	}
+
+	// Get current role name for audit logging
+	oldRoleName := "Member" // default
+	if userChannel.RoleID != nil {
+		oldRoleName = userChannel.Role.Name
 	}
 
 	// Get the target role
@@ -378,6 +458,12 @@ func (s *ChannelService) PromoteUser(requesterID, channelID, targetUserID, roleN
 	userChannel.RoleID = &role.ID
 	if err := s.db.Save(&userChannel).Error; err != nil {
 		return err
+	}
+
+	// Log user promotion
+	if err := s.auditService.LogUserRoleChange(requesterID, targetUserID, channelID, oldRoleName, roleName, true); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
 	}
 
 	return nil
@@ -400,11 +486,17 @@ func (s *ChannelService) DemoteUser(requesterID, channelID, targetUserID, roleNa
 
 	// Check if target user exists in the channel
 	var userChannel UserChannel
-	if err := s.db.Where("user_id = ? AND channel_id = ?", targetUserID, channelID).First(&userChannel).Error; err != nil {
+	if err := s.db.Preload("Role").Where("user_id = ? AND channel_id = ?", targetUserID, channelID).First(&userChannel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("user not found in channel")
 		}
 		return err
+	}
+
+	// Get current role name for audit logging
+	oldRoleName := "Member" // default
+	if userChannel.RoleID != nil {
+		oldRoleName = userChannel.Role.Name
 	}
 
 	// Get the target role
@@ -417,6 +509,12 @@ func (s *ChannelService) DemoteUser(requesterID, channelID, targetUserID, roleNa
 	userChannel.RoleID = &role.ID
 	if err := s.db.Save(&userChannel).Error; err != nil {
 		return err
+	}
+
+	// Log user demotion
+	if err := s.auditService.LogUserRoleChange(requesterID, targetUserID, channelID, oldRoleName, roleName, false); err != nil {
+		// Log error but don't fail the operation
+		// TODO: Add proper logging
 	}
 
 	return nil
