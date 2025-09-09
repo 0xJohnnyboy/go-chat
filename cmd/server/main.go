@@ -4,12 +4,12 @@
 // @description A real-time chat server with JWT authentication, channel management, and WebSocket support
 // @termsOfService http://swagger.io/terms/
 
-// @contact.name API Support
-// @contact.url http://github.com/your-org/go-chat
-// @contact.email support@gochat.dev
+// @contact.name Go Chat API Support
+// @contact.url http://github.com/0xJohnnyboy/go-chat
+// @contact.email contact@theolambert.com
 
-// @license.name MIT
-// @license.url https://opensource.org/licenses/MIT
+// @license.name AGPL 3.0
+// @license.url https://github.com/0xJohnnyboy/go-chat/blob/main/LICENSE.md 
 
 // @host localhost:9876
 // @BasePath /
