@@ -3,6 +3,7 @@ package api
 import (
 	a "go-chat/internal/auth"
 	"go-chat/internal/middleware"
+	"go-chat/internal/websocket"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -15,7 +16,9 @@ type Router struct {
 	mh *MessageHandlers
 	sh *SearchHandlers
 	audh *AuditHandlers
+	wsh *WebSocketHandler
 	am *a.AuthMiddleware
+	hub *websocket.Hub
 	// Rate limiters for different endpoint types
 	authRateLimit     *middleware.IPRateLimiter
 	generalRateLimit  *middleware.IPRateLimiter
@@ -23,6 +26,9 @@ type Router struct {
 }
 
 func NewRouter(db *gorm.DB) *Router {
+	hub := websocket.NewHub()
+	go hub.Run()
+	
 	return &Router{
 		ah: NewHandlers(db),
 		ch: NewChannelHandlers(db),
@@ -30,7 +36,9 @@ func NewRouter(db *gorm.DB) *Router {
 		mh: NewMessageHandlers(db),
 		sh: NewSearchHandlers(db),
 		audh: NewAuditHandlers(db),
+		wsh: NewWebSocketHandler(hub),
 		am: a.NewAuthMiddleware(),
+		hub: hub,
 		// Initialize rate limiters with different configurations
 		authRateLimit:     middleware.NewIPRateLimiter(middleware.StrictRateLimit),
 		generalRateLimit:  middleware.NewIPRateLimiter(middleware.StandardRateLimit),
@@ -61,6 +69,16 @@ func (r *Router) RegisterRoutes(router *gin.Engine) {
 		authProtected.Use(middleware.RateLimitMiddleware(r.authRateLimit))
 		authProtected.POST("/logout", r.ah.LogoutHandler)
 		authProtected.POST("/refresh_token", r.ah.RefreshTokenHandler)
+	}
+	
+	{
+		// WebSocket endpoints with standard rate limiting
+		ws := router.Group("/")
+		ws.Use(r.am.RequireAuth())
+		ws.Use(middleware.RateLimitMiddleware(r.generalRateLimit))
+		ws.GET("/ws", r.wsh.HandleWebSocket)
+		ws.GET("/ws/info", r.wsh.GetConnectionInfo)
+		ws.GET("/ws/channels/:channel_id/stats", r.wsh.GetChannelStats)
 	}
 	
 	{
