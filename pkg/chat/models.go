@@ -122,3 +122,71 @@ func (m *Message) BeforeCreate(tx *gorm.DB) (err error) {
 	m.ID, err = nanoid.New(10)
 	return err
 }
+
+// WebSocket message types and structures
+type MessageType string
+
+const (
+	MessageTypeMessage       MessageType = "message"
+	MessageTypeJoinChannel   MessageType = "join_channel"
+	MessageTypeLeaveChannel  MessageType = "leave_channel"
+	MessageTypeTyping        MessageType = "typing"
+	MessageTypePing          MessageType = "ping"
+	MessageTypePong          MessageType = "pong"
+	MessageTypeError         MessageType = "error"
+	MessageTypeUserJoined    MessageType = "user_joined"
+	MessageTypeUserLeft      MessageType = "user_left"
+)
+
+// WebSocketMessage represents a WebSocket message envelope
+type WebSocketMessage struct {
+	Type      MessageType `json:"type"`
+	Data      interface{} `json:"data"`
+	Timestamp time.Time   `json:"timestamp"`
+	MessageID string      `json:"message_id,omitempty"`
+}
+
+// MessagePayload represents a chat message
+type MessagePayload struct {
+	MessageID string    `json:"message_id"`
+	ChannelID string    `json:"channel_id"`
+	Content   string    `json:"content"`
+	UserID    string    `json:"user_id"`
+	Username  string    `json:"username"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// JoinChannelPayload represents a join channel request
+type JoinChannelPayload struct {
+	ChannelID string `json:"channel_id"`
+}
+
+// LeaveChannelPayload represents a leave channel request
+type LeaveChannelPayload struct {
+	ChannelID string `json:"channel_id"`
+}
+
+// ChatMessagePayload represents a chat message to send
+type ChatMessagePayload struct {
+	ChannelID string `json:"channel_id"`
+	Content   string `json:"content"`
+}
+
+// TypingPayload represents typing status
+type TypingPayload struct {
+	ChannelID string `json:"channel_id"`
+	IsTyping  bool   `json:"is_typing"`
+}
+
+// ErrorPayload represents an error response
+type ErrorPayload struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+// UserEventPayload represents user join/leave events
+type UserEventPayload struct {
+	ChannelID string `json:"channel_id"`
+	UserID    string `json:"user_id"`
+	Username  string `json:"username"`
+}
